@@ -24,6 +24,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -200,11 +201,13 @@ public class ConversationHandler {
                         .buildAndSend(new CallbackListener() {
                             @Override
                             public void onSuccess(Object data) {
+                                System.out.println("messageMap- onSuccess");
                                 result.success("send");
                             }
 
                             @Override
                             public void onError(ErrorInfo errorInfo) {
+                                System.out.println("messageMap- onError");
                                 result.success(errorInfo.getMessage());
                             }
                         });
@@ -233,7 +236,7 @@ public class ConversationHandler {
                             messageMap.put("body", message.getBody());
                             messageMap.put("attributes", message.getAttributes().toString());
                             messageMap.put("dateCreated", message.getDateCreated());
-                            //System.out.println("messageMap-"+message.getDateCreated());
+                            System.out.println("messageMap- onMessageAdded");
                             triggerEvent(messageMap);
                             result.setLastReadMessageIndex(result.getLastMessageIndex(), new CallbackListener<Long>() {
                                 @Override
@@ -281,7 +284,7 @@ public class ConversationHandler {
 
                     @Override
                     public void onSynchronizationChanged(Conversation conversation) {
-                        System.out.println("conversation onSynchronizationChanged->" + conversation.getSynchronizationStatus().toString());
+                        System.out.println("conversation onSynchronizationChanged->" + conversation.getSynchronizationStatus().toString() + ": " + conversation.getSynchronizationStatus().getValue());
                         if (messageInterface != null) {
                             Map<String, Object> syncMap = new HashMap<>();
                             syncMap.put("status", conversation.getSynchronizationStatus().getValue());
@@ -354,6 +357,7 @@ public class ConversationHandler {
                             System.out.println("Success fetching last message: " + messages.get(0).getBody());
                             conversationMap.put("sid", conversationId);
                             conversationMap.put("lastMessage", messages.get(0).getBody());
+                            conversationMap.put("datetime", String.valueOf(conversation.getLastMessageDate().getTime()));
                             list.add(conversationMap);
                         } else {
                             System.out.println("Else fetching last message: ");

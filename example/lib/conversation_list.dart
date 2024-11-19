@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:twilio_conversation_sdk/twilio_conversation_sdk.dart';
 
 class ConversationList extends StatefulWidget {
-  const ConversationList(this.identity, {super.key});
+  const ConversationList(this.identity, this.twilioConversationSdkPlugin,
+      {super.key});
 
   final String identity;
+  final TwilioConversationSdk twilioConversationSdkPlugin;
 
   @override
   State<ConversationList> createState() => _ConversationListState();
 }
 
 class _ConversationListState extends State<ConversationList> {
-  final _twilioConversationSdkPlugin = TwilioConversationSdk();
+  //final _twilioConversationSdkPlugin = TwilioConversationSdk();
   late List conversationList = List.empty(growable: true);
   late List lastMessageList = List.empty(growable: true);
   bool isLoading = false;
@@ -26,7 +29,8 @@ class _ConversationListState extends State<ConversationList> {
   }
 
   Future<void> listOfConversation() async {
-    var list = await _twilioConversationSdkPlugin.getConversations() ?? [];
+    var list =
+        await widget.twilioConversationSdkPlugin.getConversations() ?? [];
 
     conversationList.clear();
     conversationList.addAll(list);
@@ -40,8 +44,8 @@ class _ConversationListState extends State<ConversationList> {
             conversationId: sid) ?? [];
         print("Flutter LastMessageUnReadCount: $lastUnReadMessageCount");*/
 
-        var lastMessage = await _twilioConversationSdkPlugin.getLastMessages(
-                conversationId: sid) ??
+        var lastMessage = await widget.twilioConversationSdkPlugin
+                .getLastMessages(conversationId: sid) ??
             [];
         print("Flutter LastMessage: $lastMessage");
 
@@ -49,12 +53,14 @@ class _ConversationListState extends State<ConversationList> {
           // Extract the message body from the fetched last message
           var messageBody = lastMessage[0]['lastMessage'] ??
               'No message'; // Default if no body
+          String? time = lastMessage[0]['datetime']; // Default if no body
 
           // Find and update the conversation in conversationList by matching sid
           int index = conversationList.indexWhere((c) => c['sid'] == sid);
           if (index != -1) {
             // Update the conversation with the last message
             conversationList[index]['lastMessage'] = messageBody;
+            conversationList[index]['datetime'] = time;
           }
         }
       }
@@ -108,6 +114,16 @@ class _ConversationListState extends State<ConversationList> {
                         conversationList.elementAt(index)['conversationName'];
                     var lastMessage =
                         conversationList.elementAt(index)['lastMessage'];
+                    String formattedTime = '';
+                    if (conversationList.elementAt(index)['datetime'] != null) {
+                      String time =
+                          conversationList.elementAt(index)['datetime'];
+                      DateTime dateTime =
+                          DateTime.fromMillisecondsSinceEpoch(int.parse(time));
+
+                      formattedTime = DateFormat('hh:mm a').format(dateTime);
+                      print(formattedTime);
+                    }
 
                     return Card(
                         child: SizedBox(
@@ -131,19 +147,32 @@ class _ConversationListState extends State<ConversationList> {
                                 ],
                               ),
                             ),
-                            unreadIndex != 0
-                                ? Container(
-                                    padding: const EdgeInsets.all(10),
-                                    decoration: const BoxDecoration(
-                                        color: Colors.black,
-                                        shape: BoxShape.circle),
-                                    child: Text(
-                                      unreadIndex.toString(),
-                                      style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold),
-                                    ))
-                                : Container()
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  formattedTime,
+                                  style: TextStyle(
+                                      color: unreadIndex != 0
+                                          ? Colors.green
+                                          : Colors.grey,
+                                      fontWeight: FontWeight.normal),
+                                ),
+                                unreadIndex != 0
+                                    ? Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: const BoxDecoration(
+                                            color: Colors.black,
+                                            shape: BoxShape.circle),
+                                        child: Text(
+                                          unreadIndex.toString(),
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold),
+                                        ))
+                                    : Container()
+                              ],
+                            )
                           ],
                         ),
                       ),

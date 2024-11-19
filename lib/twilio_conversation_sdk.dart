@@ -5,6 +5,14 @@ import 'package:flutter/services.dart';
 import 'twilio_conversation_sdk_platform_interface.dart';
 
 class TwilioConversationSdk {
+  TwilioConversationSdk() {
+    _init();
+  }
+
+  void _init() {
+    print('TwilioConversationSdk Initialization');
+  }
+
   Future<String?> getPlatformVersion() {
     return TwilioConversationSdkPlatform.instance.getPlatformVersion();
   }
@@ -18,14 +26,15 @@ class TwilioConversationSdk {
       EventChannel('twilio_conversation_sdk/onClientSynchronizationChanged');
 
   // Stream controllers for message updates and token status changes.
-  static final StreamController<Map> _messageUpdateController =
+  static final StreamController<Map> messageUpdateController =
       StreamController<Map>.broadcast();
   static final StreamController<Map> _tokenStatusController =
       StreamController<Map>.broadcast();
-  static final StreamController<Map> _clientStatusController = StreamController<Map>.broadcast();
+  static final StreamController<Map> _clientStatusController =
+      StreamController<Map>.broadcast();
 
   /// Stream for receiving incoming messages.
-  Stream<Map> get onMessageReceived => _messageUpdateController.stream;
+  Stream<Map> get onMessageReceived => messageUpdateController.stream;
 
   /// Stream for client synchronous status.
   Stream<Map> get onClientSyncStatusChanged => _clientStatusController.stream;
@@ -56,7 +65,8 @@ class TwilioConversationSdk {
   /// - [accessToken]: The access token used for authentication.
   ///
   /// Returns a [String] indicating the result of the initialization, or `null` if it fails.
-  Future<String?> initializeConversationClient({required String accessToken}) async {
+  Future<String?> initializeConversationClient(
+      {required String accessToken}) async {
     _clientEventChannel
         .receiveBroadcastStream(accessToken)
         .listen((dynamic clientStatus) {
@@ -77,7 +87,8 @@ class TwilioConversationSdk {
   ///
   /// Returns a [String] indicating the result of the operation, or `null` if it fails.
   Future<String?> registerFCMToken({required String fcmToken}) {
-    return TwilioConversationSdkPlatform.instance.registerFCMToken(fcmToken: fcmToken);
+    return TwilioConversationSdkPlatform.instance
+        .registerFCMToken(fcmToken: fcmToken);
   }
 
   /// Creates a new conversation.
@@ -90,8 +101,8 @@ class TwilioConversationSdk {
   /// Returns a [String] indicating the result of the operation, or `null` if it fails.
   Future<String?> createConversation(
       {required String conversationName, required String identity}) {
-    return TwilioConversationSdkPlatform.instance
-        .createConversation(conversationName: conversationName, identity: identity);
+    return TwilioConversationSdkPlatform.instance.createConversation(
+        conversationName: conversationName, identity: identity);
   }
 
   /// Retrieves a list of conversations.
@@ -102,23 +113,25 @@ class TwilioConversationSdk {
   Future<List?> getConversations() {
     return TwilioConversationSdkPlatform.instance.getConversations();
   }
-  
+
   /// Retrieves a list of conversations logged user last messages.
   ///
   /// This method retrieves a list of conversations available to the user.
   ///
   /// Returns a list of conversations logged user last messages [List], or `null` if the operation fails.
   Future<List?> getLastMessages({required String conversationId}) {
-    return TwilioConversationSdkPlatform.instance.getLastMessages(conversationId: conversationId);
+    return TwilioConversationSdkPlatform.instance
+        .getLastMessages(conversationId: conversationId);
   }
-  
+
   /// Retrieves a list of conversations logged user last messages unread count.
   ///
   /// This method retrieves a list of conversations available to the user.
   ///
   /// Returns a list of conversations logged user last messages unread count [List], or `null` if the operation fails.
   Future<List?> getUnReadMsgCount({required String conversationId}) {
-    return TwilioConversationSdkPlatform.instance.getUnReadMsgCount(conversationId: conversationId);
+    return TwilioConversationSdkPlatform.instance
+        .getUnReadMsgCount(conversationId: conversationId);
   }
 
   /// Retrieves messages from a conversation.
@@ -130,9 +143,10 @@ class TwilioConversationSdk {
   /// - [messageCount]: The maximum number of messages to retrieve (optional).
   ///
   /// Returns a list of messages as [List], or `null` if the operation fails.
-  Future<List?> getMessages({required String conversationId, int? messageCount}) {
-    return TwilioConversationSdkPlatform.instance
-        .getMessages(conversationId: conversationId, messageCount: messageCount);
+  Future<List?> getMessages(
+      {required String conversationId, int? messageCount}) {
+    return TwilioConversationSdkPlatform.instance.getMessages(
+        conversationId: conversationId, messageCount: messageCount);
   }
 
   /// Joins a conversation.
@@ -165,16 +179,18 @@ class TwilioConversationSdk {
   ///
   /// - [participantName]: The name of the participant to be added.
   /// - [conversationId]: The ID of the conversation in which to add the participant.
-  Future<String?> addParticipant({required participantName, required conversationId}) {
-    return TwilioConversationSdkPlatform.instance
-        .addParticipant(conversationId: conversationId, participantName: participantName);
+  Future<String?> addParticipant(
+      {required participantName, required conversationId}) {
+    return TwilioConversationSdkPlatform.instance.addParticipant(
+        conversationId: conversationId, participantName: participantName);
   }
 
   /// Removes a participant from a conversation.
   ///
   /// - [participantName]: The name of the participant to be removed.
   /// - [conversationId]: The ID of the conversation from which to remove the participant.
-  Future<String?> removeParticipant({required participantName, required conversationId}) {
+  Future<String?> removeParticipant(
+      {required participantName, required conversationId}) {
     return TwilioConversationSdkPlatform.instance.removeParticipant(
         conversationId: conversationId, participantName: participantName);
   }
@@ -208,10 +224,10 @@ class TwilioConversationSdk {
         .listen((dynamic message) {
       if (message != null) {
         if (message["author"] != null && message["body"] != null) {
-          _messageUpdateController.add(message);
+          messageUpdateController.add(message);
         }
         if (message["status"] != null) {
-          _messageUpdateController.add(message);
+          messageUpdateController.add(message);
         }
       }
     });

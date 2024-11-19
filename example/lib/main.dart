@@ -57,6 +57,19 @@ class _ConversationState extends State<Conversation> {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       _animateToIndex(messages.length);
     });
+    _twilioConversationSdkPlugin.onMessageReceived.listen((event) async {
+      if (event['status'] != null) {
+        print("Conversation Status Received ${event.toString()}");
+        if (event['status'] == 3) {
+          await getAllMessages();
+        }
+      } else if (event['author'] != null) {
+        print("Conversation Message Received ${event.toString()}");
+        messages.add(event);
+        _animateToIndex(messages.length);
+        setState(() {});
+      }
+    });
   }
 
   void getAccessToken(String accountSid, String apiKey, String apiSecret,
@@ -119,28 +132,14 @@ class _ConversationState extends State<Conversation> {
     }
   }
 
-  unsubscribe() {
+  unsubscribe() async {
     _twilioConversationSdkPlugin.unSubscribeToMessageUpdate(
         conversationSid: conversationId);
   }
 
-  subscribe() {
+  subscribe() async {
     _twilioConversationSdkPlugin.subscribeToMessageUpdate(
         conversationSid: conversationId);
-    _twilioConversationSdkPlugin.onMessageReceived.listen((event) async {
-      if (event['status'] != null) {
-        print("Conversation Status Received ${event.toString()}");
-        if (event['status'] == 3) {
-          await getAllMessages();
-        }
-      } else if (event['author'] != null) {
-        print("Conversation Message Received ${event.toString()}");
-        messages.add(event);
-        _animateToIndex(messages.length);
-      }
-      setState(() {});
-    });
-    setState(() {});
   }
 
   createConversation() async {
@@ -169,7 +168,7 @@ class _ConversationState extends State<Conversation> {
     if (isSendAttribute) {
       attribute = {
         "body": message.text.toString().trim(),
-        "url": "http://www.google.com",
+        "url": "https://www.google.com",
         "cardId": timeStamp
       };
     } else {
@@ -187,10 +186,10 @@ class _ConversationState extends State<Conversation> {
 
   getAllMessages() async {
     print("Get Message for $conversationId");
-    messages.clear();
     var messageList = await _twilioConversationSdkPlugin.getMessages(
             conversationId: conversationId) ??
         [];
+    messages.clear();
     messages.addAll(messageList);
     print("Messages $messages");
     setState(() {});
@@ -210,6 +209,7 @@ class _ConversationState extends State<Conversation> {
 
   @override
   Widget build(BuildContext context) {
+    print("Build");
     return Scaffold(
       floatingActionButton: accessToken!.isNotEmpty
           ? Padding(
@@ -218,16 +218,17 @@ class _ConversationState extends State<Conversation> {
                 // isExtended: true,
                 backgroundColor: Colors.black,
                 onPressed: () {
+                  unsubscribe();
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (context) {
-                        return ConversationList(identity);
+                        return ConversationList(
+                            identity, _twilioConversationSdkPlugin);
                       },
                     ),
                   ).then((data) {
                     subscribe();
                   });
-                  unsubscribe();
                 },
                 // isExtended: true,
                 child: const Icon(
@@ -260,8 +261,8 @@ class _ConversationState extends State<Conversation> {
         actions: [
           accessToken!.isNotEmpty
               ? IconButton(
-                  onPressed: () {
-                    getAllMessages();
+                  onPressed: () async {
+                    await getAllMessages();
                   },
                   icon: const Icon(Icons.refresh),
                   iconSize: 30,

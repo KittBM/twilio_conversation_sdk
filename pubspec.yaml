@@ -1,6 +1,6 @@
 name: twilio_conversation_sdk
 description: "Twilio Conversation SDK"
-version: 0.0.6
+version: 0.0.2
 homepage:
 
 environment:

@@ -53,14 +53,12 @@ class _ConversationListState extends State<ConversationList> {
           // Extract the message body from the fetched last message
           var messageBody = lastMessage[0]['lastMessage'] ??
               'No message'; // Default if no body
-          String? time = lastMessage[0]['datetime']; // Default if no body
 
           // Find and update the conversation in conversationList by matching sid
           int index = conversationList.indexWhere((c) => c['sid'] == sid);
           if (index != -1) {
             // Update the conversation with the last message
             conversationList[index]['lastMessage'] = messageBody;
-            conversationList[index]['datetime'] = time;
           }
         }
       }
@@ -72,6 +70,8 @@ class _ConversationListState extends State<ConversationList> {
 
   @override
   Widget build(BuildContext context) {
+    DateTime now = DateTime.now();
+
     return Scaffold(
       appBar: AppBar(
         elevation: 10,
@@ -116,13 +116,15 @@ class _ConversationListState extends State<ConversationList> {
                         conversationList.elementAt(index)['lastMessage'];
                     String formattedTime = '';
                     if (conversationList.elementAt(index)['datetime'] != null) {
-                      String time =
-                          conversationList.elementAt(index)['datetime'];
+                      int time = conversationList.elementAt(index)['datetime'];
                       DateTime dateTime =
-                          DateTime.fromMillisecondsSinceEpoch(int.parse(time));
-
-                      formattedTime = DateFormat('hh:mm a').format(dateTime);
-                      print(formattedTime);
+                          DateTime.fromMillisecondsSinceEpoch(time);
+                      if (dateTime.isBefore(now)) {
+                        formattedTime =
+                            DateFormat('MM/dd/yyyy hh:mm a').format(dateTime);
+                      } else {
+                        formattedTime = DateFormat('hh:mm a').format(dateTime);
+                      }
                     }
 
                     return Card(

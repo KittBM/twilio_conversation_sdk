@@ -335,6 +335,11 @@ public class ConversationHandler {
             conversationMap.put("uniqueName", conversationList.get(i).getUniqueName());
             conversationMap.put("lastReadIndex", conversationList.get(i).getLastReadMessageIndex());
             conversationMap.put("lastMessageIndex", conversationList.get(i).getLastMessageIndex());
+            if (conversationList.get(i).getLastMessageDate() != null) {
+                conversationMap.put("datetime", conversationList.get(i).getLastMessageDate().getTime());
+                System.out.println("conversationMapTime->" + conversationList.get(i).getLastMessageDate().getTime());
+            }
+
             if (conversationList.get(i).getFriendlyName() != null && !conversationList.get(i).getFriendlyName().trim().isEmpty()) {
                 list.add(conversationMap);
             }
@@ -357,7 +362,6 @@ public class ConversationHandler {
                             System.out.println("Success fetching last message: " + messages.get(0).getBody());
                             conversationMap.put("sid", conversationId);
                             conversationMap.put("lastMessage", messages.get(0).getBody());
-                            conversationMap.put("datetime", String.valueOf(conversation.getLastMessageDate().getTime()));
                             list.add(conversationMap);
                         } else {
                             System.out.println("Else fetching last message: ");

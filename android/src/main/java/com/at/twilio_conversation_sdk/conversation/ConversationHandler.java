@@ -23,12 +23,15 @@ import com.twilio.util.ErrorInfo;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.TimeZone;
 import java.util.concurrent.CountDownLatch;
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
@@ -336,8 +339,17 @@ public class ConversationHandler {
             conversationMap.put("lastReadIndex", conversationList.get(i).getLastReadMessageIndex());
             conversationMap.put("lastMessageIndex", conversationList.get(i).getLastMessageIndex());
             if (conversationList.get(i).getLastMessageDate() != null) {
-                conversationMap.put("datetime", conversationList.get(i).getLastMessageDate().getTime());
-                System.out.println("conversationMapTime->" + conversationList.get(i).getLastMessageDate().getTime());
+                SimpleDateFormat inputFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
+                SimpleDateFormat outputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
+                outputFormat.setTimeZone(TimeZone.getTimeZone("UTC")); // Convert to UTC
+                try {
+                    Date date = inputFormat.parse(conversationList.get(i).getLastMessageDate().toString());
+                    String outputDateStr = outputFormat.format(date);
+                    conversationMap.put("lastMessageDate", outputDateStr);
+                    System.out.println("lastMessageDateTime->" + outputDateStr);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
             }
 
             if (conversationList.get(i).getFriendlyName() != null && !conversationList.get(i).getFriendlyName().trim().isEmpty()) {
@@ -362,6 +374,19 @@ public class ConversationHandler {
                             System.out.println("Success fetching last message: " + messages.get(0).getBody());
                             conversationMap.put("sid", conversationId);
                             conversationMap.put("lastMessage", messages.get(0).getBody());
+                            if (conversation.getLastMessageDate() != null) {
+                                SimpleDateFormat inputFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
+                                SimpleDateFormat outputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
+                                outputFormat.setTimeZone(TimeZone.getTimeZone("UTC")); // Convert to UTC
+                                try {
+                                    Date date = inputFormat.parse(conversation.getLastMessageDate().toString());
+                                    String outputDateStr = outputFormat.format(date);
+                                    conversationMap.put("lastMessageDate", outputDateStr);
+                                    System.out.println("lastMessageDateTime->" + outputDateStr);
+                                } catch (ParseException e) {
+                                    e.printStackTrace();
+                                }
+                            }
                             list.add(conversationMap);
                         } else {
                             System.out.println("Else fetching last message: ");
@@ -396,9 +421,9 @@ public class ConversationHandler {
                     @Override
                     public void onSuccess(Long data) {
 
-                        System.out.println("Success fetching last message: " + data);
+                        System.out.println("Success fetching getUnreadMessagesCount: " + data);
                         conversationMap.put("sid", conversationId);
-                        conversationMap.put("lastMessage", data);
+                        conversationMap.put("unReadCount", data);
                         list.add(conversationMap);
 
                         result.success(list);

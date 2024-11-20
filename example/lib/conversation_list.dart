@@ -40,10 +40,6 @@ class _ConversationListState extends State<ConversationList> {
       if (sid != null) {
         //TODO unread msg count working
 
-        /*var lastUnReadMessageCount = await _twilioConversationSdkPlugin.getUnReadMsgCount(
-            conversationId: sid) ?? [];
-        print("Flutter LastMessageUnReadCount: $lastUnReadMessageCount");*/
-
         var lastMessage = await widget.twilioConversationSdkPlugin
                 .getLastMessages(conversationId: sid) ??
             [];
@@ -61,6 +57,24 @@ class _ConversationListState extends State<ConversationList> {
             conversationList[index]['lastMessage'] = messageBody;
           }
         }
+
+        /*var lastUnReadMessageCount = await widget.twilioConversationSdkPlugin
+                .getUnReadMsgCount(conversationId: sid) ??
+            [];
+        print("Flutter LastMessageUnReadCount: $lastUnReadMessageCount");
+
+        if (lastUnReadMessageCount.isNotEmpty) {
+          // Extract the message body from the fetched last message
+          var messageBody = lastUnReadMessageCount[0]['unReadCount'] ??
+              0; // Default if no body
+
+          // Find and update the conversation in conversationList by matching sid
+          int index = conversationList.indexWhere((c) => c['sid'] == sid);
+          if (index != -1) {
+            // Update the conversation with the last message
+            conversationList[index]['unReadCount'] = messageBody;
+          }
+        }*/
       }
     }
     isLoading = false;
@@ -96,7 +110,7 @@ class _ConversationListState extends State<ConversationList> {
       ),
       body: Center(
         child: isLoading
-            ? CircularProgressIndicator()
+            ? const CircularProgressIndicator()
             : Padding(
                 padding: const EdgeInsets.all(18.0),
                 child: ListView.builder(
@@ -110,6 +124,12 @@ class _ConversationListState extends State<ConversationList> {
                     if (lastMessageIndex != null && lastReadIndex != null) {
                       unreadIndex = lastMessageIndex - lastReadIndex;
                     }
+                    /*if (conversationList.elementAt(index)['unReadCount'] !=
+                        null) {
+                      unreadIndex =
+                          conversationList.elementAt(index)['unReadCount'];
+                    }*/
+
                     var conversationName =
                         conversationList.elementAt(index)['conversationName'];
                     var lastMessage =

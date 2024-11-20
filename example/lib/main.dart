@@ -38,6 +38,7 @@ class _ConversationState extends State<Conversation> {
   static var identity = '';
   static var participantIdentity = '';
   static var pushSid = '';
+
   // String? accessToken = "";
   String? accessToken = "";
 
@@ -54,10 +55,10 @@ class _ConversationState extends State<Conversation> {
 
   @override
   void initState() {
-
     super.initState();
-    getAccessToken(accountSid, apiKey, apiSecret,
-        identity, serviceSid, pushSid);
+    //for ios only
+    /*getAccessToken(
+        accountSid, apiKey, apiSecret, identity, serviceSid, pushSid);*/
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       _animateToIndex(messages.length);
     });
@@ -78,13 +79,13 @@ class _ConversationState extends State<Conversation> {
 
   void getAccessToken(String accountSid, String apiKey, String apiSecret,
       String identity, String serviceSid, String pushSid) async {
-    // accessToken = await _twilioConversationSdkPlugin.generateToken(
-    //     accountSid: accountSid,
-    //     apiKey: apiKey,
-    //     apiSecret: apiSecret,
-    //     identity: identity,
-    //     serviceSid: serviceSid,
-    //     pushSid: pushSid);
+    accessToken = await _twilioConversationSdkPlugin.generateToken(
+        accountSid: accountSid,
+        apiKey: apiKey,
+        apiSecret: apiSecret,
+        identity: identity,
+        serviceSid: serviceSid,
+        pushSid: pushSid);
     final String? resultInitialization = await _twilioConversationSdkPlugin
         .initializeConversationClient(accessToken: accessToken!);
     if (resultInitialization!.isNotEmpty) {
@@ -95,9 +96,7 @@ class _ConversationState extends State<Conversation> {
       _twilioConversationSdkPlugin.onClientSyncStatusChanged.listen((event) {
         print("Client Status Received ${event.toString()}");
         if (event['status'] != null) {
-
           if (event['status'] == 2) {
-
             checkOrCreateConversation();
           }
         }
@@ -147,6 +146,8 @@ class _ConversationState extends State<Conversation> {
   subscribe() async {
     _twilioConversationSdkPlugin.subscribeToMessageUpdate(
         conversationSid: conversationId);
+
+
   }
 
   createConversation() async {
@@ -416,8 +417,10 @@ class _ConversationState extends State<Conversation> {
   }
 
   getMessageView(String attribute, String message, String author, String date) {
-    DateTime tempDate = DateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").parse(date);
-    String timeAgo = Jiffy.parseFromDateTime(tempDate).fromNow();
+    DateTime tempDate =
+        DateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").parse(date, true);
+    // String timeAgo = Jiffy.parseFromDateTime(tempDate).fromNow();
+    String timeAgo = DateFormat("hh:mm a").format(tempDate.toLocal());
 
     if (attribute.contains("url")) {
       Map<String, String> attributeModel = Map.castFrom(json.decode(attribute));
@@ -451,10 +454,7 @@ class _ConversationState extends State<Conversation> {
                     Text(
                       textAlign: TextAlign.end,
                       timeAgo,
-                      style: TextStyle(
-                          color:
-                              author == identity ? Colors.white : Colors.white,
-                          fontSize: 10),
+                      style: const TextStyle(color: Colors.white, fontSize: 10),
                     ),
                   ],
                 ),
@@ -482,9 +482,7 @@ class _ConversationState extends State<Conversation> {
                   Text(
                     textAlign: TextAlign.end,
                     timeAgo,
-                    style: TextStyle(
-                        color: author == identity ? Colors.blue : Colors.black,
-                        fontSize: 10),
+                    style: const TextStyle(color: Colors.grey, fontSize: 10),
                   ),
                 ],
               ),
@@ -512,9 +510,7 @@ class _ConversationState extends State<Conversation> {
                 Text(
                   timeAgo,
                   textAlign: TextAlign.end,
-                  style: TextStyle(
-                      color: author == identity ? Colors.blue : Colors.black,
-                      fontSize: 10),
+                  style: const TextStyle(color: Colors.grey, fontSize: 10),
                 ),
               ],
             ),

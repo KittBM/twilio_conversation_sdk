@@ -115,10 +115,13 @@ class _ConversationListState extends State<ConversationList> {
                     var lastMessage =
                         conversationList.elementAt(index)['lastMessage'];
                     String formattedTime = '';
-                    if (conversationList.elementAt(index)['datetime'] != null) {
-                      int time = conversationList.elementAt(index)['datetime'];
-                      DateTime dateTime =
-                          DateTime.fromMillisecondsSinceEpoch(time);
+                    if (conversationList.elementAt(index)['lastMessageDate'] !=
+                        null) {
+                      print(
+                          "dateTime ; ${conversationList.elementAt(index)['lastMessageDate']}");
+                      String time =
+                          conversationList.elementAt(index)['lastMessageDate'];
+                      DateTime dateTime = DateTime.parse(time).toLocal();
                       if (dateTime.isBefore(now)) {
                         formattedTime =
                             DateFormat('MM/dd/yyyy hh:mm a').format(dateTime);
@@ -132,7 +135,21 @@ class _ConversationListState extends State<ConversationList> {
                       child: Padding(
                         padding: const EdgeInsets.all(10.0),
                         child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
+                            Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: const BoxDecoration(
+                                    color: Colors.black,
+                                    shape: BoxShape.circle),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  conversationName.substring(0, 1),
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 25),
+                                )),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,

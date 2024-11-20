@@ -38,6 +38,7 @@ class _ConversationState extends State<Conversation> {
   static var identity = '';
   static var participantIdentity = '';
   static var pushSid = '';
+  // String? accessToken = "";
   String? accessToken = "";
 
   final _twilioConversationSdkPlugin = TwilioConversationSdk();
@@ -53,7 +54,10 @@ class _ConversationState extends State<Conversation> {
 
   @override
   void initState() {
+
     super.initState();
+    getAccessToken(accountSid, apiKey, apiSecret,
+        identity, serviceSid, pushSid);
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       _animateToIndex(messages.length);
     });
@@ -74,23 +78,26 @@ class _ConversationState extends State<Conversation> {
 
   void getAccessToken(String accountSid, String apiKey, String apiSecret,
       String identity, String serviceSid, String pushSid) async {
-    accessToken = await _twilioConversationSdkPlugin.generateToken(
-        accountSid: accountSid,
-        apiKey: apiKey,
-        apiSecret: apiSecret,
-        identity: identity,
-        serviceSid: serviceSid,
-        pushSid: pushSid);
+    // accessToken = await _twilioConversationSdkPlugin.generateToken(
+    //     accountSid: accountSid,
+    //     apiKey: apiKey,
+    //     apiSecret: apiSecret,
+    //     identity: identity,
+    //     serviceSid: serviceSid,
+    //     pushSid: pushSid);
     final String? resultInitialization = await _twilioConversationSdkPlugin
         .initializeConversationClient(accessToken: accessToken!);
     if (resultInitialization!.isNotEmpty) {
+      print("resultInitialization _twilioConversationSdkPlugin ");
       //final String? resultFCM = await _twilioConversationSdkPlugin.registerFCMToken(fcmToken: "d0ixyx8QTY6MzTeVeDcKFB:APA91bHJysESFNrS_QDUdXvFjxmUmHxAA2u5zWWqVgDv6kjaZdNTandmiXl2E2g88Dha-1hpNX_Qf5YwTYwp7nHzSMoHsTItcl2kLq1Z4BVfx-mc2QkpXfE");
       //print(resultFCM);
 
       _twilioConversationSdkPlugin.onClientSyncStatusChanged.listen((event) {
         print("Client Status Received ${event.toString()}");
         if (event['status'] != null) {
+
           if (event['status'] == 2) {
+
             checkOrCreateConversation();
           }
         }

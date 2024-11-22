@@ -332,6 +332,7 @@ public class ConversationHandler {
         List<Map<String, Object>> list = new ArrayList<>();
         for (int i = 0; i < conversationList.size(); i++) {
             Map<String, Object> conversationMap = new HashMap<>();
+
             conversationMap.put("sid", conversationList.get(i).getSid());
             conversationMap.put("conversationName", conversationList.get(i).getFriendlyName());
             conversationMap.put("createdBy", conversationList.get(i).getCreatedBy());
@@ -366,6 +367,7 @@ public class ConversationHandler {
         conversationClient.getConversation(conversationId, new CallbackListener<Conversation>() {
             @Override
             public void onSuccess(Conversation conversation) {
+
                 Map<String, Object> conversationMap = new HashMap<>();
                 conversation.getLastMessages(1, new CallbackListener<List<Message>>() {
                     @Override
@@ -601,6 +603,7 @@ public class ConversationHandler {
 
             @Override
             public void onError(ErrorInfo errorInfo) {
+                System.out.println("Error " +errorInfo);
                 result.success(Strings.authenticationFailed);
             }
         });

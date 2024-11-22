@@ -1,3 +1,5 @@
-## 0.0.6
+## 0.1.3
+Added Support for iOS FCM Registration
 
-*initial release.
+## 0.1.2
+Initial Release

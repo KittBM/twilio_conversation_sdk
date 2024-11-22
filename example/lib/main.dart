@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:jiffy/jiffy.dart';
 import 'package:twilio_conversation_sdk/twilio_conversation_sdk.dart';
 import 'package:twilio_conversation_sdk_example/conversation_list.dart';
 
@@ -39,9 +38,7 @@ class _ConversationState extends State<Conversation> {
   static var participantIdentity = '';
   static var pushSid = ''; // Conversation Service SID
   String? accessToken = "";
-
   final _twilioConversationSdkPlugin = TwilioConversationSdk();
-
   var conversationId = "";
   var conversationName = "";
   List messages = List.empty(growable: true);
@@ -72,8 +69,8 @@ class _ConversationState extends State<Conversation> {
     });
   }
 
-  void getAccessToken(String accountSid, String apiKey, String apiSecret,
-      String identity, String serviceSid, String pushSid) async {
+  void getAccessToken(String accountSid, String apiKey, String apiSecret, String identity,
+      String serviceSid, String pushSid) async {
     accessToken = await _twilioConversationSdkPlugin.generateToken(
         accountSid: accountSid,
         apiKey: apiKey,
@@ -106,15 +103,14 @@ class _ConversationState extends State<Conversation> {
   }
 
   checkOrCreateConversation() async {
-    List conversationList =
-        await _twilioConversationSdkPlugin.getConversations() ?? [];
+    List conversationList = await _twilioConversationSdkPlugin.getConversations() ?? [];
     print("Conversation List $conversationList");
     if (conversationList.isNotEmpty) {
       bool isParticipantFound = false;
       for (Map conversation in conversationList) {
         print("Conversation $conversation");
-        List participantList = await _twilioConversationSdkPlugin
-                .getParticipants(conversationId: conversation["sid"]) ??
+        List participantList = await _twilioConversationSdkPlugin.getParticipants(
+                conversationId: conversation["sid"]) ??
             [];
         for (Map participant in participantList) {
           print("Participant $participant");
@@ -192,9 +188,9 @@ class _ConversationState extends State<Conversation> {
 
   getAllMessages() async {
     print("Get Message for $conversationId");
-    var messageList = await _twilioConversationSdkPlugin.getMessages(
-            conversationId: conversationId) ??
-        [];
+    var messageList =
+        await _twilioConversationSdkPlugin.getMessages(conversationId: conversationId) ??
+            [];
     messages.clear();
     messages.addAll(messageList);
     print("Messages $messages");
@@ -206,8 +202,7 @@ class _ConversationState extends State<Conversation> {
   addParticipant() async {
     final String? addSecondParticipantConversation =
         await _twilioConversationSdkPlugin.addParticipant(
-            conversationId: conversationId,
-            participantName: participantIdentity);
+            conversationId: conversationId, participantName: participantIdentity);
     print("Result Second $addSecondParticipantConversation");
     unsubscribe();
     subscribe();
@@ -223,15 +218,13 @@ class _ConversationState extends State<Conversation> {
         leading: participantIdentity.isNotEmpty
             ? Container(
                 padding: const EdgeInsets.all(10),
-                decoration: const BoxDecoration(
-                    color: Colors.black, shape: BoxShape.circle),
+                decoration:
+                    const BoxDecoration(color: Colors.black, shape: BoxShape.circle),
                 alignment: Alignment.center,
                 child: Text(
                   participantIdentity.substring(0, 1),
                   style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 25),
+                      color: Colors.white, fontWeight: FontWeight.bold, fontSize: 25),
                 ))
             : Container(),
         title: Text(identity.isEmpty
@@ -254,8 +247,7 @@ class _ConversationState extends State<Conversation> {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) {
-                          return ConversationList(
-                              identity, _twilioConversationSdkPlugin);
+                          return ConversationList(identity, _twilioConversationSdkPlugin);
                         },
                       ),
                     ).then((data) {
@@ -280,8 +272,8 @@ class _ConversationState extends State<Conversation> {
                         onChanged: (value) {
                           identity = value;
                         },
-                        decoration: const InputDecoration(
-                            labelText: 'Enter your identity'),
+                        decoration:
+                            const InputDecoration(labelText: 'Enter your identity'),
                       ),
                     )
                   : Container(),
@@ -301,8 +293,8 @@ class _ConversationState extends State<Conversation> {
                   ? ElevatedButton(
                       onPressed: () {
                         if (identity.isNotEmpty) {
-                          getAccessToken(accountSid, apiKey, apiSecret,
-                              identity, serviceSid, pushSid);
+                          getAccessToken(accountSid, apiKey, apiSecret, identity,
+                              serviceSid, pushSid);
                         }
                       },
                       child: Text("Get Access Token"),
@@ -352,10 +344,7 @@ class _ConversationState extends State<Conversation> {
                                       hintText: 'Message',
                                       hintStyle: TextStyle(color: Colors.white),
                                       contentPadding: EdgeInsets.only(
-                                          left: 15,
-                                          bottom: 11,
-                                          top: 11,
-                                          right: 15),
+                                          left: 15, bottom: 11, top: 11, right: 15),
                                     ),
                                   ),
                                 ),
@@ -407,8 +396,7 @@ class _ConversationState extends State<Conversation> {
   }
 
   getMessageView(String attribute, String message, String author, String date) {
-    DateTime tempDate =
-        DateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").parse(date, true);
+    DateTime tempDate = DateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").parse(date, true);
     // String timeAgo = Jiffy.parseFromDateTime(tempDate).fromNow();
     String timeAgo = DateFormat("hh:mm a").format(tempDate.toLocal());
 
@@ -417,8 +405,7 @@ class _ConversationState extends State<Conversation> {
       //print(valueMap.runtimeType);
       if (attributeModel['url'] != null) {
         return Align(
-          alignment:
-              author == identity ? Alignment.centerRight : Alignment.centerLeft,
+          alignment: author == identity ? Alignment.centerRight : Alignment.centerLeft,
           child: Card(
             margin: const EdgeInsets.all(10),
             color: author == identity ? Colors.blue : Colors.black,
@@ -435,9 +422,7 @@ class _ConversationState extends State<Conversation> {
                         textAlign: TextAlign.center,
                         attributeModel['url']!,
                         style: TextStyle(
-                            color: author == identity
-                                ? Colors.white
-                                : Colors.white,
+                            color: author == identity ? Colors.white : Colors.white,
                             fontSize: 14),
                       ),
                     ),
@@ -454,8 +439,7 @@ class _ConversationState extends State<Conversation> {
         );
       } else {
         return Align(
-          alignment:
-              author == identity ? Alignment.centerRight : Alignment.centerLeft,
+          alignment: author == identity ? Alignment.centerRight : Alignment.centerLeft,
           child: Card(
             margin: const EdgeInsets.all(10),
             child: Padding(
@@ -482,8 +466,7 @@ class _ConversationState extends State<Conversation> {
       }
     } else {
       return Align(
-        alignment:
-            author == identity ? Alignment.centerRight : Alignment.centerLeft,
+        alignment: author == identity ? Alignment.centerRight : Alignment.centerLeft,
         child: Card(
           margin: const EdgeInsets.all(10),
           child: Padding(

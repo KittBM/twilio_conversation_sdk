@@ -1,70 +1,72 @@
 import Flutter
 import UIKit
 import Foundation
+import TwilioConversationsClient
 
-public class TwilioConversationSdkPlugin: NSObject, FlutterPlugin,FlutterStreamHandler {
+public class TwilioConversationSdkPlugin: NSObject, FlutterPlugin,FlutterStreamHandler  {
     var conversationsHandler = ConversationsHandler()
     var eventSink: FlutterEventSink?
+    var localConversation: TCHConversation?
     var tokenEventSink: FlutterEventSink?
     private var conversationsHandlers: ConversationsHandler?
-
- public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
+    
+    public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
         self.eventSink = events
         self.conversationsHandler.tokenEventSink = events
         return nil
     }
-
+    
     public func onCancel(withArguments arguments: Any?) -> FlutterError? {
         self.eventSink = nil
         self.tokenEventSink = nil
         return nil
     }
-//  public static func register(with registrar: FlutterPluginRegistrar) {
-//    let channel = FlutterMethodChannel(name: "twilio_conversation_sdk", binaryMessenger: registrar.messenger())
-//    let instance = TwilioConversationSdkPlugin()
-//    registrar.addMethodCallDelegate(instance, channel: channel)
-//  }
-
- public static func register(with registrar: FlutterPluginRegistrar) {
-    let channel = FlutterMethodChannel(name: "twilio_conversation_sdk", binaryMessenger: registrar.messenger())
-    let synchronizationStatusEventChannel = FlutterEventChannel(name: "twilio_conversation_sdk/synchronizationStatusEventChannel", binaryMessenger: registrar.messenger())
-    let onClientSynchronizationChangedEventChannel = FlutterEventChannel(name: "twilio_conversation_sdk/onClientSynchronizationChanged", binaryMessenger: registrar.messenger())
-    let messageEventChannel = FlutterEventChannel(name: "twilio_conversation_sdk/onMessageUpdated", binaryMessenger: registrar.messenger())
-    let tokenEventChannel = FlutterEventChannel(name: "twilio_conversation_sdk/onTokenStatusChange", binaryMessenger: registrar.messenger())
-
-    let instance = TwilioConversationSdkPlugin()
-    registrar.addMethodCallDelegate(instance, channel: channel)
-    messageEventChannel.setStreamHandler(instance)
-    synchronizationStatusEventChannel.setStreamHandler(instance)
-    tokenEventChannel.setStreamHandler(instance)
-    onClientSynchronizationChangedEventChannel.setStreamHandler(instance)
-  }
-
-//  public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-//    switch call.method {
-//    case "getPlatformVersion":
-//      result("iOS " + UIDevice.current.systemVersion)
-//    default:
-//      result(FlutterMethodNotImplemented)
-//    }
-//  }
-
+    //  public static func register(with registrar: FlutterPluginRegistrar) {
+    //    let channel = FlutterMethodChannel(name: "twilio_conversation_sdk", binaryMessenger: registrar.messenger())
+    //    let instance = TwilioConversationSdkPlugin()
+    //    registrar.addMethodCallDelegate(instance, channel: channel)
+    //  }
+    
+    public static func register(with registrar: FlutterPluginRegistrar) {
+        let channel = FlutterMethodChannel(name: "twilio_conversation_sdk", binaryMessenger: registrar.messenger())
+        let synchronizationStatusEventChannel = FlutterEventChannel(name: "twilio_conversation_sdk/synchronizationStatusEventChannel", binaryMessenger: registrar.messenger())
+        let onClientSynchronizationChangedEventChannel = FlutterEventChannel(name: "twilio_conversation_sdk/onClientSynchronizationChanged", binaryMessenger: registrar.messenger())
+        let messageEventChannel = FlutterEventChannel(name: "twilio_conversation_sdk/onMessageUpdated", binaryMessenger: registrar.messenger())
+        let tokenEventChannel = FlutterEventChannel(name: "twilio_conversation_sdk/onTokenStatusChange", binaryMessenger: registrar.messenger())
+        
+        let instance = TwilioConversationSdkPlugin()
+        registrar.addMethodCallDelegate(instance, channel: channel)
+        messageEventChannel.setStreamHandler(instance)
+        synchronizationStatusEventChannel.setStreamHandler(instance)
+        tokenEventChannel.setStreamHandler(instance)
+        onClientSynchronizationChangedEventChannel.setStreamHandler(instance)
+    }
+    
+    //  public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+    //    switch call.method {
+    //    case "getPlatformVersion":
+    //      result("iOS " + UIDevice.current.systemVersion)
+    //    default:
+    //      result(FlutterMethodNotImplemented)
+    //    }
+    //  }
+    
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let arguments = call.arguments as? [String:Any]
         print("call->\(String(describing: call.method))")
         print("arguments->\(String(describing: arguments))")
-
+        
         switch call.method {
         case Methods.generateToken:
-  //          TwilioApi.requestTwilioAccessToken(identity:arguments?["identity"] as! String) { apiResult in
-  //              switch apiResult {
-  //              case .success(let accessToken):
-  //                  result(accessToken)
-  //              case .failure(let error):
-  //                  print("Error requesting Twilio Access Token: \(error)")
-  //                  result("")
-  //              }
-  //          }
+            //          TwilioApi.requestTwilioAccessToken(identity:arguments?["identity"] as! String) { apiResult in
+            //              switch apiResult {
+            //              case .success(let accessToken):
+            //                  result(accessToken)
+            //              case .failure(let error):
+            //                  print("Error requesting Twilio Access Token: \(error)")
+            //                  result("")
+            //              }
+            //          }
             break
         case Methods.updateAccessToken:
             self.conversationsHandler.updateAccessToken(accessToken: arguments?["accessToken"] as! String) { tchResult in
@@ -83,11 +85,10 @@ public class TwilioConversationSdkPlugin: NSObject, FlutterPlugin,FlutterStreamH
             }
             break
         case Methods.initializeConversationClient:
-            self.conversationsHandler.sysStatusDelegate = self
+            self.conversationsHandler.clientDelegate = self
             self.conversationsHandler.loginWithAccessToken(arguments?["accessToken"] as! String) { loginResult in
                 guard let loginResultSuccessful: Bool = loginResult?.isSuccessful else {return}
                 if(loginResultSuccessful) {
-                
                     result(Strings.authenticationSuccessful)
                 }else {
                     result(Strings.authenticationFailed)
@@ -117,7 +118,11 @@ public class TwilioConversationSdkPlugin: NSObject, FlutterPlugin,FlutterStreamH
                     dictionary["sid"] = conversation.sid
                     dictionary["createdBy"] = conversation.createdBy
                     dictionary["dateCreated"] = conversation.dateCreated
-                    dictionary["lastMessageDate"] = conversation.lastMessageDate?.description
+                    dictionary["lastReadIndex"] = conversation.lastReadMessageIndex
+                    dictionary["lastMessageIndex"] = conversation.lastMessageIndex
+                    if (conversation.lastMessageDate != nil){
+                        dictionary["lastMessageDate"] = conversation.lastMessageDate?.description
+                    }
                     dictionary["uniqueName"] = conversation.uniqueName
                     if (ConvertorUtility.isNilOrEmpty(dictionary["conversationName"]) == false && ConvertorUtility.isNilOrEmpty(dictionary["sid"]) == false){
                         listOfConversations.append(dictionary)
@@ -178,7 +183,7 @@ public class TwilioConversationSdkPlugin: NSObject, FlutterPlugin,FlutterStreamH
             self.conversationsHandler.getConversationFromId(conversationId: arguments?["conversationId"] as! String) { conversation in
                 if let conversationFromId = conversation {
                     self.conversationsHandler.loadPreviousMessages(conversationFromId,arguments?["messageCount"] as? UInt) { listOfMessages in
-  //                      print("listOfMessagess->\(String(describing: listOfMessages))")
+                        //                      print("listOfMessagess->\(String(describing: listOfMessages))")
                         result(listOfMessages)
                     }
                 }
@@ -187,14 +192,14 @@ public class TwilioConversationSdkPlugin: NSObject, FlutterPlugin,FlutterStreamH
         case Methods.getLastMessages:
             self.conversationsHandler.getConversationFromId(conversationId: arguments?["conversationId"] as! String) { conversation in
                 if let conversationFromId = conversation {
-                    self.conversationsHandler.loadPreviousMessages(conversationFromId,arguments?["messageCount"] as? UInt) { listOfMessages in
-  //                      print("listOfMessagess->\(String(describing: listOfMessages))")
+                    self.conversationsHandler.getLastMessage(conversationFromId,arguments?["messageCount"] as? UInt) { listOfMessages in
+                        //                      print("listOfMessagess->\(String(describing: listOfMessages))")
                         result(listOfMessages)
                     }
                 }
             }
             break
-
+            
         case Methods.sendMessage:
             self.conversationsHandler.sendMessage(conversationId: arguments?["conversationId"] as! String, messageText: arguments?["message"] as! String) { tchResult, tchMessages in
                 if (tchResult.isSuccessful){
@@ -206,21 +211,42 @@ public class TwilioConversationSdkPlugin: NSObject, FlutterPlugin,FlutterStreamH
             break
         case Methods.subscribeToMessageUpdate:
             if let conversationId = arguments?["conversationId"] as? String {
-                conversationsHandler.conversationDelegate = self
+                conversationsHandler.messageDelegate = self
                 conversationsHandler.messageSubscriptionId = conversationId
+                //MARK: TODO
+                self.conversationsHandler.getConversationFromId(conversationId: arguments?["conversationId"] as! String) { conversation in
+                    self.conversationsHandler.messageDelegate?.onSynchronizationChanged(status: ["status" : conversation?.synchronizationStatus.rawValue])
+                    
+                    //MARK: setLastReadMessageIndex
+                    conversation?.setLastReadMessageIndex(conversation?.lastMessageIndex ?? 0, completion: { result, index in
+                        print("setLastReadMessageIndex\(result.description)")
+                        self.conversationsHandler.lastReadIndex = nil
+                    })
+                }
             }
+            
             break
         case Methods.unSubscribeToMessageUpdate:
-            conversationsHandler.conversationDelegate = nil
+            self.conversationsHandler.getConversationFromId(conversationId: arguments?["conversationId"] as! String) { conversation in
+                self.conversationsHandler.lastReadIndex = conversation?.lastMessageIndex
+            }
+            
+            conversationsHandler.messageDelegate = nil
+
             break
         default:
             break
-      }
+        }
     }
+    
 
 }
 
-extension TwilioConversationSdkPlugin : ConversationDelegate {
+extension TwilioConversationSdkPlugin : MessageDelegate {
+    func onSynchronizationChanged(status: [String : Any]) {
+        self.eventSink?(status)
+    }
+
     func onMessageUpdate(message: [String : Any], messageSubscriptionId: String) {
         if let conversationId = message["conversationId"] as? String,let message = message["message"] as? [String:Any] {
             if (messageSubscriptionId == conversationId) {
@@ -236,3 +262,6 @@ extension TwilioConversationSdkPlugin : ClientDelegate {
         self.eventSink?(status)
     }
 }
+
+
+

@@ -6,6 +6,6 @@
 //
 
 protocol MessageDelegate: AnyObject {
-    func onMessageUpdate(message: [String: Any])
+    func onMessageUpdate(message: [String: Any],  messageSubscriptionId : String)
     func onSynchronizationChanged(status: [String: Any])
 }

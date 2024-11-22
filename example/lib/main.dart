@@ -38,7 +38,6 @@ class _ConversationState extends State<Conversation> {
   static var identity = '';
   static var participantIdentity = '';
   static var pushSid = '';
-
   // String? accessToken = "";
   String? accessToken = "";
 
@@ -55,14 +54,16 @@ class _ConversationState extends State<Conversation> {
 
   @override
   void initState() {
+
     super.initState();
-    //for ios only
-    /*getAccessToken(
-        accountSid, apiKey, apiSecret, identity, serviceSid, pushSid);*/
+    getAccessToken(accountSid, apiKey, apiSecret,
+        identity, serviceSid, pushSid);
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       _animateToIndex(messages.length);
     });
     _twilioConversationSdkPlugin.onMessageReceived.listen((event) async {
+      print("Conversation _twilioConversationSdkPlugin");
+
       if (event['status'] != null) {
         print("Conversation Status Received ${event.toString()}");
         if (event['status'] == 3) {
@@ -79,13 +80,13 @@ class _ConversationState extends State<Conversation> {
 
   void getAccessToken(String accountSid, String apiKey, String apiSecret,
       String identity, String serviceSid, String pushSid) async {
-    accessToken = await _twilioConversationSdkPlugin.generateToken(
-        accountSid: accountSid,
-        apiKey: apiKey,
-        apiSecret: apiSecret,
-        identity: identity,
-        serviceSid: serviceSid,
-        pushSid: pushSid);
+    // accessToken = await _twilioConversationSdkPlugin.generateToken(
+    //     accountSid: accountSid,
+    //     apiKey: apiKey,
+    //     apiSecret: apiSecret,
+    //     identity: identity,
+    //     serviceSid: serviceSid,
+    //     pushSid: pushSid);
     final String? resultInitialization = await _twilioConversationSdkPlugin
         .initializeConversationClient(accessToken: accessToken!);
     if (resultInitialization!.isNotEmpty) {
@@ -96,6 +97,10 @@ class _ConversationState extends State<Conversation> {
       _twilioConversationSdkPlugin.onClientSyncStatusChanged.listen((event) {
         print("Client Status Received ${event.toString()}");
         if (event['status'] != null) {
+          if (event['status'] == 3) {
+             getAllMessages();
+          }
+
           if (event['status'] == 2) {
             checkOrCreateConversation();
           }
@@ -146,7 +151,6 @@ class _ConversationState extends State<Conversation> {
   subscribe() async {
     _twilioConversationSdkPlugin.subscribeToMessageUpdate(
         conversationSid: conversationId);
-
 
   }
 
@@ -235,6 +239,7 @@ class _ConversationState extends State<Conversation> {
                       },
                     ),
                   ).then((data) {
+                    print("subscribe call");
                     subscribe();
                   });
                 },

@@ -7,28 +7,60 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
     
     
     // MARK: Conversations variables
-    private var client: TwilioConversationsClient?
-    var conversationDelegate: ConversationDelegate?
-    var sysStatusDelegate: ClientDelegate?
+   private var client: TwilioConversationsClient?
+    var lastReadIndex: NSNumber?
+    weak var messageDelegate: MessageDelegate?
+    weak var clientDelegate: ClientDelegate?
 //    weak var tokenDelegate:TokenDelegate?
     public var messageSubscriptionId: String = ""
     var tokenEventSink: FlutterEventSink?
 
-    // Called whenever a conversation we've joined receives a new message
+    
+    
+//    MARK: raw
     func conversationsClient(_ client: TwilioConversationsClient, conversation: TCHConversation,
                     messageAdded message: TCHMessage) {
+        
+        
         guard client.synchronizationStatus == .completed else {
             return
         }
-        
-                self.getMessageInDictionary(message) { messageDictionary in
+       
+        self.getMessageInDictionary(message) { [self] messageDictionary in
             if let messageDict = messageDictionary {
                 var updatedMessage: [String: Any] = [:]
                 updatedMessage["conversationId"] = conversation.sid ?? ""
                 updatedMessage["message"] = messageDict
-                self.conversationDelegate?.onMessageUpdate(message: updatedMessage, messageSubscriptionId: self.messageSubscriptionId)
+                //MARK: Update Index
+                let computedIndex: NSNumber = {
+                    if let lastRead = lastReadIndex {
+                        return lastRead
+                    } else if let lastMessageIndex = conversation.lastMessageIndex {
+                        // Extract the value of lastMessageIndex and add 1
+                        return NSNumber(value: lastMessageIndex.intValue + 1)
+                    } else {
+                        return 0
+                    }
+                }()
+
+                conversation.setLastReadMessageIndex(computedIndex) { result, index in
+                    print("setLastReadMessageIndex \(result.description)")
+                }
+
+                self.messageDelegate?.onMessageUpdate(message: updatedMessage, messageSubscriptionId: self.messageSubscriptionId)
+                
+//                print("lastReadIndex \(conversation.lastMessageIndex)")
+
             }
         }
+    }
+    
+    
+    
+    func conversationsClient(_ client: TwilioConversationsClient, conversation: TCHConversation, synchronizationStatusUpdated status: TCHConversationSynchronizationStatus) {
+//        self.messageDelegate?.onSynchronizationChanged(status: ["status" : conversation.synchronizationStatus.rawValue])
+//        print("StatusConversations \(conversation.synchronizationStatus.rawValue) ")
+        
     }
     
     func conversationsClientTokenWillExpire(_ client: TwilioConversationsClient) {
@@ -39,14 +71,17 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
         tokenEventSink?(tokenStatusMap)
     }
     
+    
     func conversationsClient(_ client: TwilioConversationsClient, synchronizationStatusUpdated status: TCHClientSynchronizationStatus) {
         
-        print("status->\(status.hashValue)--\(client.synchronizationStatus)")
-        self.sysStatusDelegate?.onClientSynchronizationChanged(status: ["status":client.synchronizationStatus.rawValue])
+        print("statusclient->\(status.hashValue)--\(client.synchronizationStatus)")
+       
         guard status == .completed else {
             return
         }
-        
+        self.clientDelegate?.onClientSynchronizationChanged(status: ["status":client.synchronizationStatus.rawValue])
+        print("StatusClient \(client.synchronizationStatus.rawValue) ")
+
 //            checkConversationCreation { (_, conversation) in
 //               if let conversation = conversation {
 //                   self.joinConversation(conversation)
@@ -59,6 +94,8 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
 //               }
 //            }
         }
+    
+    
     
     func conversationsClientTokenExpired(_ client: TwilioConversationsClient) {
         print("Access token expired.\(String(describing: tokenEventSink))")
@@ -89,7 +126,7 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
          properties: nil,
          delegate: self) { (result, client) in
            self.client = client
-            self.sysStatusDelegate?.onClientSynchronizationChanged(status: ["status" : client?.synchronizationStatus.rawValue ?? -1])
+            self.clientDelegate?.onClientSynchronizationChanged(status: ["status" : client?.synchronizationStatus.rawValue ?? -1])
             print("\(client?.synchronizationStatus.rawValue ?? -1)")
 //            self.client?.delegate?.conversationsClient?(<#T##client: TwilioConversationsClient##TwilioConversationsClient#>, synchronizationStatusUpdated: TCHClientSynchronizationStatus)
             completion(result)
@@ -129,6 +166,7 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
         guard client.synchronizationStatus == .completed else {
             return
         }
+
         completion(client.myConversations() ?? [])
     }
     
@@ -182,6 +220,7 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
         }
         client.conversation(withSidOrUniqueName: conversationId) { (result, conversation) in
             if let conversationFromSid = conversation {
+                print("message readed")
                 completion(conversationFromSid)
             }
         }
@@ -194,6 +233,26 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
         }
         var listOfMessagess: [[String: Any]] = []
         conversation.getLastMessages(withCount: messageCount ?? 1000) { (result, messages) in
+            if let messagesList = messages {
+                messagesList.forEach { message in
+                    self.getMessageInDictionary(message) { messageDictionary in
+                        if let messageDict = messageDictionary {
+                            listOfMessagess.append(messageDict)
+                        }
+                    }
+                }
+                completion(listOfMessagess)
+            }
+        }
+    }
+    
+    func getLastMessage(_ conversation: TCHConversation,_ messageCount: UInt?,_ completion: @escaping([[String: Any]]?) -> Void) {
+        print("synchronizationStatus->\(client?.synchronizationStatus == .completed)")
+        guard client?.synchronizationStatus == .completed else {
+            return
+        }
+        var listOfMessagess: [[String: Any]] = []
+        conversation.getLastMessages(withCount: messageCount ?? 1) { (result, messages) in
             if let messagesList = messages {
                 messagesList.forEach { message in
                     self.getMessageInDictionary(message) { messageDictionary in
@@ -224,14 +283,19 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
         dictionary["sid"] = message.participantSid
         dictionary["author"] = message.author
         dictionary["body"] = message.body
-        dictionary["attributes"] = message.attributes()?.string
+        dictionary["attributes"] = message.attributes()?.string ?? ""
         dictionary["dateCreated"] = message.dateCreated
         dictionary["participant"] = message.participant?.identity
         dictionary["participantSid"] = message.participantSid
         dictionary["description"] = message.description
         dictionary["index"] = message.index
         dictionary["lastMessage"] = message.body
+//        dictionary["datetime"] = message.dateUpdated
+        
+        
         dictionary["attachedMedia"] = attachedMedia
         completion(dictionary)
     }
 }
+
+

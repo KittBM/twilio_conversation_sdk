@@ -241,10 +241,11 @@ public class ConversationHandler {
                             messageMap.put("dateCreated", message.getDateCreated());
                             System.out.println("messageMap- onMessageAdded");
                             triggerEvent(messageMap);
-                            result.setLastReadMessageIndex(result.getLastMessageIndex(), new CallbackListener<Long>() {
+
+                            result.setLastReadMessageIndex(result.getLastMessageIndex() + 1, new CallbackListener<Long>() {
                                 @Override
                                 public void onSuccess(Long result) {
-
+                                    System.out.println("LastReadMessageIndex- " + result);
                                 }
                             });
 

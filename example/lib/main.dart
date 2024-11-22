@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -33,18 +34,14 @@ class _ConversationState extends State<Conversation> {
   static var accountSid = '';
   static var apiKey = '';
   static var apiSecret = '';
-  static var serviceSid =
-      ''; // Conversation Service SID
+  static var serviceSid = ''; // Conversation Service SID
   static var identity = '';
   static var participantIdentity = '';
-  static var pushSid = '';
-  // String? accessToken = "";
+  static var pushSid = ''; // Conversation Service SID
   String? accessToken = "";
 
   final _twilioConversationSdkPlugin = TwilioConversationSdk();
 
-  //var conversationId = "";
-  //var conversationId = "";
   var conversationId = "";
   var conversationName = "";
   List messages = List.empty(growable: true);
@@ -54,10 +51,7 @@ class _ConversationState extends State<Conversation> {
 
   @override
   void initState() {
-
     super.initState();
-    getAccessToken(accountSid, apiKey, apiSecret,
-        identity, serviceSid, pushSid);
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       _animateToIndex(messages.length);
     });
@@ -80,13 +74,13 @@ class _ConversationState extends State<Conversation> {
 
   void getAccessToken(String accountSid, String apiKey, String apiSecret,
       String identity, String serviceSid, String pushSid) async {
-    // accessToken = await _twilioConversationSdkPlugin.generateToken(
-    //     accountSid: accountSid,
-    //     apiKey: apiKey,
-    //     apiSecret: apiSecret,
-    //     identity: identity,
-    //     serviceSid: serviceSid,
-    //     pushSid: pushSid);
+    accessToken = await _twilioConversationSdkPlugin.generateToken(
+        accountSid: accountSid,
+        apiKey: apiKey,
+        apiSecret: apiSecret,
+        identity: identity,
+        serviceSid: serviceSid,
+        pushSid: pushSid);
     final String? resultInitialization = await _twilioConversationSdkPlugin
         .initializeConversationClient(accessToken: accessToken!);
     if (resultInitialization!.isNotEmpty) {
@@ -97,8 +91,9 @@ class _ConversationState extends State<Conversation> {
       _twilioConversationSdkPlugin.onClientSyncStatusChanged.listen((event) {
         print("Client Status Received ${event.toString()}");
         if (event['status'] != null) {
-          if (event['status'] == 3) {
-             getAllMessages();
+          //only for ios work
+          if (Platform.isIOS && event['status'] == 3) {
+            getAllMessages();
           }
 
           if (event['status'] == 2) {
@@ -151,7 +146,6 @@ class _ConversationState extends State<Conversation> {
   subscribe() async {
     _twilioConversationSdkPlugin.subscribeToMessageUpdate(
         conversationSid: conversationId);
-
   }
 
   createConversation() async {
@@ -223,34 +217,6 @@ class _ConversationState extends State<Conversation> {
   Widget build(BuildContext context) {
     print("Build");
     return Scaffold(
-      floatingActionButton: accessToken!.isNotEmpty
-          ? Padding(
-              padding: const EdgeInsets.only(bottom: 50),
-              child: FloatingActionButton(
-                // isExtended: true,
-                backgroundColor: Colors.black,
-                onPressed: () {
-                  unsubscribe();
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) {
-                        return ConversationList(
-                            identity, _twilioConversationSdkPlugin);
-                      },
-                    ),
-                  ).then((data) {
-                    print("subscribe call");
-                    subscribe();
-                  });
-                },
-                // isExtended: true,
-                child: const Icon(
-                  Icons.chat,
-                  color: Colors.white,
-                ),
-              ),
-            )
-          : Container(),
       appBar: AppBar(
         elevation: 10,
         titleSpacing: 10,
@@ -278,6 +244,25 @@ class _ConversationState extends State<Conversation> {
                     await getAllMessages();
                   },
                   icon: const Icon(Icons.refresh),
+                  iconSize: 30,
+                )
+              : Container(),
+          accessToken!.isNotEmpty
+              ? IconButton(
+                  onPressed: () async {
+                    unsubscribe();
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return ConversationList(
+                              identity, _twilioConversationSdkPlugin);
+                        },
+                      ),
+                    ).then((data) {
+                      subscribe();
+                    });
+                  },
+                  icon: const Icon(Icons.message),
                   iconSize: 30,
                 )
               : Container(),

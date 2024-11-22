@@ -55,7 +55,16 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
         }
     }
     
-    
+   func registerFCMToken(token: String,completion: @escaping (_ success : Bool) -> Void){
+        self.client?.register(withNotificationToken: Data(token.utf8), completion: { result in
+            
+            if result.isSuccessful {
+                completion(true)
+            }
+            print("Twilio Notification Token Set: \(result)")
+            print("Device push token registration was\(result.isSuccessful ? "" : " not") successful")
+        })
+    } 
     
     func conversationsClient(_ client: TwilioConversationsClient, conversation: TCHConversation, synchronizationStatusUpdated status: TCHConversationSynchronizationStatus) {
 //        self.messageDelegate?.onSynchronizationChanged(status: ["status" : conversation.synchronizationStatus.rawValue])

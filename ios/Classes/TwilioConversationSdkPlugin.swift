@@ -68,6 +68,17 @@ public class TwilioConversationSdkPlugin: NSObject, FlutterPlugin,FlutterStreamH
             //              }
             //          }
             break
+ case Methods.registerFCMToken:
+            conversationsHandler.registerFCMToken(token: arguments?["fcmToken"] as! String) { success in
+                print("Token Registerd")
+                result("Token Registerd")
+            }
+            break
+        case Methods.registerFCMToken:
+            conversationsHandler.registerFCMToken(token: arguments?["fcmToken"] as! String) { success in
+                print("Token Registerd")
+            }
+            break    
         case Methods.updateAccessToken:
             self.conversationsHandler.updateAccessToken(accessToken: arguments?["accessToken"] as! String) { tchResult in
                 print("Methods.updateAccessToken->\(String(describing: tchResult))")

@@ -1,6 +1,7 @@
 import UIKit
 import TwilioConversationsClient
 import Flutter
+import Foundation
 
 class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
     
@@ -120,14 +121,36 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
         })
     }
 
-    func sendMessage(conversationId:String, messageText: String,
-                     completion: @escaping (TCHResult, TCHMessage?) -> Void) {
-            self.getConversationFromId(conversationId: conversationId) { conversation in
-            conversation?.prepareMessage().setBody(messageText).buildAndSend(completion: { tchResult, tchMessages in
-                completion(tchResult,tchMessages)
-            })
+ 
+
+    func sendMessage(conversationId: String,
+                     messageText: String,
+                      attributes: [String: Any],
+                      completion: @escaping (TCHResult, TCHMessage?) -> Void) {
+        // Fetch the conversation using the provided ID
+        self.getConversationFromId(conversationId: conversationId) { conversation in
+//            if let error = error {
+//                print("Error fetching conversation: \(error.localizedDescription)")
+//                result(.failure(error))
+//                return
+//            }
+        
+            
+            // Convert attributes dictionary into Attributes type
+
+                let attributesObject : TCHJsonAttributes = TCHJsonAttributes(dictionary: attributes)
+                
+                // Prepare and send the message
+                conversation?.prepareMessage()
+                    .setAttributes(attributesObject, error: nil)
+                    .setBody(messageText).buildAndSend(completion: { tchResult, tchMessages in
+                    completion(tchResult,tchMessages)
+                })
+                    
+          
         }
     }
+
     
     func loginWithAccessToken(_ token: String, completion: @escaping (TCHResult?) -> Void) {
         // Set up Twilio Conversations client
@@ -279,20 +302,25 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
         var dictionary: [String: Any] = [:]
         var attachedMedia: [[String: Any]] = []
         
-        message.attachedMedia.forEach { media in
-            var mediaDictionary: [String: Any] = [:]
-            mediaDictionary["filename"] = media.filename ?? ""
-            mediaDictionary["contentType"] = media.contentType
-            mediaDictionary["sid"] = media.sid
-            mediaDictionary["description"] = media.description
-            mediaDictionary["size"] = media.size
-            attachedMedia.append(mediaDictionary)
-        }
 
         dictionary["sid"] = message.participantSid
         dictionary["author"] = message.author
         dictionary["body"] = message.body
-        dictionary["attributes"] = message.attributes()?.string ?? ""
+        
+        do {
+            let jsonData = try JSONSerialization.data(withJSONObject: message.attributes()!.dictionary!, options: .prettyPrinted)
+            if let jsonString = String(data: jsonData, encoding: .utf8) {
+                print(jsonString)
+                dictionary["attributes"] = jsonString
+
+            }
+        } catch {
+            print("Error converting dictionary to string: \(error.localizedDescription)")
+            dictionary["attributes"] = ""
+
+        }
+        
+//        dictionary["attributes"] = message.attributes()?.dictionary ?? Dictionary()
         dictionary["dateCreated"] = message.dateCreated
         dictionary["participant"] = message.participant?.identity
         dictionary["participantSid"] = message.participantSid

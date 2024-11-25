@@ -316,6 +316,7 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
                 dictionary["attributes"] = ""
 
             }
+        dictionary["lastMessageDate"] = formatLastMessageDateISO8601(lastMessageDateString: message.dateUpdated?.description)
         dictionary["dateCreated"] = message.dateCreated
         dictionary["lastMessage"] = message.body
         completion(dictionary)
@@ -323,3 +324,32 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
 }
 
 
+
+
+func formatLastMessageDateISO8601(lastMessageDateString: String?) -> String? {
+    // Create an ISO8601 date formatter for the input
+    let inputFormatter = ISO8601DateFormatter()
+    inputFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    
+    // Create a standard date formatter for the desired output
+    let outputFormatter = DateFormatter()
+    outputFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss Z"
+    outputFormatter.timeZone = TimeZone(abbreviation: "UTC") // Convert to UTC
+    
+    // Parse the input date and format it to the desired output
+    if let date = inputFormatter.date(from: lastMessageDateString ?? "") {
+        let outputDateString = outputFormatter.string(from: date)
+        print("lastMessageDateTime->\(outputDateString)")
+        return outputDateString
+    } else {
+        print("Failed to parse date string")
+        return nil
+    }
+}
+
+// Example usage:
+//if let formattedDate = formatLastMessageDateISO8601(lastMessageDateString: "2024-11-22T12:16:21.780Z") {
+//    print("Formatted Date: \(formattedDate)")
+//} else {
+//    print("Date parsing failed.")
+//}

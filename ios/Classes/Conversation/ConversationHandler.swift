@@ -301,36 +301,23 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
     func getMessageInDictionary(_ message:TCHMessage,_ completion: @escaping([String: Any]?) -> Void) {
         var dictionary: [String: Any] = [:]
         var attachedMedia: [[String: Any]] = []
-        
-
         dictionary["sid"] = message.participantSid
         dictionary["author"] = message.author
         dictionary["body"] = message.body
-        
-        do {
-            let jsonData = try JSONSerialization.data(withJSONObject: message.attributes()!.dictionary!, options: .prettyPrinted)
-            if let jsonString = String(data: jsonData, encoding: .utf8) {
-                print(jsonString)
-                dictionary["attributes"] = jsonString
+            do {
+                let jsonData = try JSONSerialization.data(withJSONObject: message.attributes()!.dictionary ?? Dictionary(), options: .prettyPrinted)
+                if let jsonString = String(data: jsonData, encoding: .utf8) {
+                    print(jsonString)
+                    dictionary["attributes"] = jsonString
+
+                }
+            } catch {
+                print("Error converting dictionary to string: \(error.localizedDescription)")
+                dictionary["attributes"] = ""
 
             }
-        } catch {
-            print("Error converting dictionary to string: \(error.localizedDescription)")
-            dictionary["attributes"] = ""
-
-        }
-        
-//        dictionary["attributes"] = message.attributes()?.dictionary ?? Dictionary()
         dictionary["dateCreated"] = message.dateCreated
-        dictionary["participant"] = message.participant?.identity
-        dictionary["participantSid"] = message.participantSid
-        dictionary["description"] = message.description
-        dictionary["index"] = message.index
         dictionary["lastMessage"] = message.body
-//        dictionary["datetime"] = message.dateUpdated
-        
-        
-        dictionary["attachedMedia"] = attachedMedia
         completion(dictionary)
     }
 }

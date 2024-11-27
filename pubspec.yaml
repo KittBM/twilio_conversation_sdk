@@ -1,6 +1,6 @@
 name: twilio_conversation_sdk
 description: "Twilio Conversation SDK"
-version: 0.1.3
+version: 0.1.5
 homepage: "https://github.com/ALAlliancetek/twilio_conversation_sdk"
 
 environment:

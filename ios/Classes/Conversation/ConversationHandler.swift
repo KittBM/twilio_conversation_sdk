@@ -56,16 +56,20 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
         }
     }
     
-   func registerFCMToken(token: String,completion: @escaping (_ success : Bool) -> Void){
-        self.client?.register(withNotificationToken: Data(token.utf8), completion: { result in
-            
-            if result.isSuccessful {
-                completion(true)
-            }
-            print("Twilio Notification Token Set: \(result)")
-            print("Device push token registration was\(result.isSuccessful ? "" : " not") successful")
-        })
-    } 
+    func registerFCMToken(token: String,completion: @escaping (_ success : Bool) -> Void){
+        
+         let data = token.hexToData
+//        print(data) // Output: 5 bytes
+      
+        
+        self.client?.register(withNotificationToken: data ?? Data(), completion: { result in
+             if result.isSuccessful {
+                 completion(true)
+             }
+             print("Twilio Notification Token Set: \(result) with token \(token)")
+             print("Device push token registration was\(result.isSuccessful ? "" : " not") successful")
+         })
+     }
     
     func conversationsClient(_ client: TwilioConversationsClient, conversation: TCHConversation, synchronizationStatusUpdated status: TCHConversationSynchronizationStatus) {
 //        self.messageDelegate?.onSynchronizationChanged(status: ["status" : conversation.synchronizationStatus.rawValue])
@@ -353,3 +357,26 @@ func formatLastMessageDateISO8601(lastMessageDateString: String?) -> String? {
 //} else {
 //    print("Date parsing failed.")
 //}
+extension String {
+    var hexToData: Data? {
+        // Ensure the string contains a valid hex format and even number of characters
+        guard self.count % 2 == 0,
+              self.range(of: "^[0-9a-fA-F]+$", options: .regularExpression) != nil else {
+            return nil
+        }
+
+        // Convert the hex string to `Data`
+        var data = Data()
+        var index = startIndex
+        while index < endIndex {
+            let nextIndex = self.index(index, offsetBy: 2)
+            if let byte = UInt8(self[index..<nextIndex], radix: 16) {
+                data.append(byte)
+            } else {
+                return nil // Return nil if conversion fails
+            }
+            index = nextIndex
+        }
+        return data
+    }
+}

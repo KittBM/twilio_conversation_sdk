@@ -1,11 +1,19 @@
 import 'dart:convert';
-import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:mime/mime.dart';
+import 'package:file_picker/file_picker.dart';
+
 import 'package:intl/intl.dart';
 import 'package:jiffy/jiffy.dart';
 import 'package:twilio_conversation_sdk/twilio_conversation_sdk.dart';
 import 'package:twilio_conversation_sdk_example/conversation_list.dart';
+
+DateFormat get formatterYYYYMMddTHHMMss => DateFormat('yyyy-MM-ddTHH:mm:ss');
+
+DateFormat get formatterYYYYMMddTHHMMssSSS =>
+    DateFormat('yyyy-MM-ddTHH:mm:ss.SSS');
 
 void main() {
   runApp(const MyApp());
@@ -31,44 +39,37 @@ class Conversation extends StatefulWidget {
 }
 
 class _ConversationState extends State<Conversation> {
-  static var accountSid = '';
-  static var apiKey = '';
-  static var apiSecret = '';
-  static var serviceSid = ''; // Conversation Service SID
-  static var identity = '';
-  static var participantIdentity = '';
-  static var pushSid = ''; // Conversation Service SID
+  static var accountSid = 'ACe78f25b098b2a7e1bd7a62e1faa62eb1';
+  static var apiKey = 'SKd8e02fa8a99bd970be61ec7d5fae1d6b';
+  static var apiSecret = 'dwJUkXo0mysOXKKAPhG0UduNWf4MKVX8';
+  static var serviceSid =
+      'IS8522285db9e3482986f846d12dc31381'; // Conversation Service SID
+  static var identity = 'DevChat';
+  static var participantIdentity = 'DevUserTwo';
+  static var pushSid = 'CRb0b18e1d600411634fd4b51e13d8e008';
   String? accessToken = "";
 
   final _twilioConversationSdkPlugin = TwilioConversationSdk();
 
+  //var conversationId = "CH855f87ea428044ac90b26461afe00990";
+  //var conversationId = "CH3670dee812a1474a8ab53e1f88da8ce6";
   var conversationId = "";
   var conversationName = "";
   List messages = List.empty(growable: true);
   TextEditingController message = TextEditingController();
   final ScrollController _controller = ScrollController();
   final double _height = 100.0;
+  String selectedDocPath = "";
+  String fileName = "";
+  bool isSendMedia = false;
+  double _progress = 0;
+  int totalBytes = 0;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       _animateToIndex(messages.length);
-    });
-    _twilioConversationSdkPlugin.onMessageReceived.listen((event) async {
-      print("Conversation _twilioConversationSdkPlugin");
-
-      if (event['status'] != null) {
-        print("Conversation Status Received ${event.toString()}");
-        if (event['status'] == 3) {
-          await getAllMessages();
-        }
-      } else if (event['author'] != null) {
-        print("Conversation Message Received ${event.toString()}");
-        messages.add(event);
-        _animateToIndex(messages.length);
-        setState(() {});
-      }
     });
   }
 
@@ -84,18 +85,9 @@ class _ConversationState extends State<Conversation> {
     final String? resultInitialization = await _twilioConversationSdkPlugin
         .initializeConversationClient(accessToken: accessToken!);
     if (resultInitialization!.isNotEmpty) {
-      print("resultInitialization _twilioConversationSdkPlugin ");
-      //final String? resultFCM = await _twilioConversationSdkPlugin.registerFCMToken(fcmToken: "d0ixyx8QTY6MzTeVeDcKFB:APA91bHJysESFNrS_QDUdXvFjxmUmHxAA2u5zWWqVgDv6kjaZdNTandmiXl2E2g88Dha-1hpNX_Qf5YwTYwp7nHzSMoHsTItcl2kLq1Z4BVfx-mc2QkpXfE");
-      //print(resultFCM);
-
       _twilioConversationSdkPlugin.onClientSyncStatusChanged.listen((event) {
         print("Client Status Received ${event.toString()}");
         if (event['status'] != null) {
-          //only for ios work
-          if (Platform.isIOS && event['status'] == 3) {
-            getAllMessages();
-          }
-
           if (event['status'] == 2) {
             checkOrCreateConversation();
           }
@@ -138,14 +130,62 @@ class _ConversationState extends State<Conversation> {
     }
   }
 
-  unsubscribe() async {
+  unsubscribe() {
     _twilioConversationSdkPlugin.unSubscribeToMessageUpdate(
         conversationSid: conversationId);
   }
 
-  subscribe() async {
+  subscribe() {
     _twilioConversationSdkPlugin.subscribeToMessageUpdate(
         conversationSid: conversationId);
+    _twilioConversationSdkPlugin.onMessageReceived.listen((event) async {
+      if (event['status'] != null) {
+        print("Conversation Status Received ${event.toString()}");
+        if (event['status'] == 3) {
+          await getAllMessages();
+        }
+      } else if (event['author'] != null) {
+        print("Conversation Message Received ${event.toString()}");
+        messages.add(event);
+        _animateToIndex(messages.length);
+        setState(() {});
+      } else if (event['mediaStatus'] != null) {
+        if (event['mediaStatus'] == "Completed" ||
+            event['mediaStatus'] == "Failed") {
+          setState(() {
+            _progress = 0;
+            totalBytes = 0;
+            isSendMedia = false;
+          });
+        }
+        print("Conversation Message Received ${event.toString()}");
+      } else if (event['bytesSent'] != null) {
+        print("Conversation Message Received ${event.toString()}");
+        setState(() {
+          final bytesSent = event['bytesSent'];
+          _progress = bytesSent / totalBytes;
+        });
+      } else if (event['messageStatus'] != null) {
+        if (event['messageStatus'] == "Failed") {
+          setState(() {
+            _progress = 0;
+            totalBytes = 0;
+            isSendMedia = false;
+          });
+        }
+        print("Conversation Message Received ${event.toString()}");
+      }
+    });
+    /* _twilioConversationSdkPlugin.onMediaProgressReceived.listen((event) async {
+      if (event['messageStatus'] != null) {
+        print("onMediaProgressReceived ${event.toString()}");
+      } else if (event['mediaStatus'] != null) {
+        print("onMediaProgressReceived ${event.toString()}");
+      } else if (event['bytesSent'] != null) {
+        print("onMediaProgressReceived ${event.toString()}");
+      }
+    });*/
+    setState(() {});
   }
 
   createConversation() async {
@@ -170,15 +210,18 @@ class _ConversationState extends State<Conversation> {
 
   sendMessage({bool isSendAttribute = false}) async {
     String timeStamp = DateTime.now().toString();
-    Map<String, String> attribute;
+    Map<String, dynamic> attribute;
     if (isSendAttribute) {
       attribute = {
         "body": message.text.toString().trim(),
-        "url": "https://www.google.com",
-        "cardId": timeStamp
+        "url": "http://www.google.com",
+        "cardId": timeStamp,
       };
     } else {
-      attribute = {"body": message.text.toString().trim(), "cardId": timeStamp};
+      attribute = {
+        "body": message.text.toString().trim(),
+        "cardId": timeStamp,
+      };
     }
 
     final String? sendMessage = await _twilioConversationSdkPlugin.sendMessage(
@@ -190,12 +233,32 @@ class _ConversationState extends State<Conversation> {
     setState(() {});
   }
 
+  sendMessageWithMedia() async {
+    Map<String, dynamic> attribute;
+
+    attribute = {"hasMedia": true};
+
+    final String? sendMessage =
+        await _twilioConversationSdkPlugin.sendMessageWithMedia(
+            message: "",
+            conversationId: conversationId,
+            attribute: attribute,
+            mediaFilePath: selectedDocPath,
+            mimeType: getMimeType(selectedDocPath),
+            fileName: fileName);
+    print("Result $sendMessage");
+    _progress = 0;
+    totalBytes = 0;
+    isSendMedia = false;
+    setState(() {});
+  }
+
   getAllMessages() async {
     print("Get Message for $conversationId");
+    messages.clear();
     var messageList = await _twilioConversationSdkPlugin.getMessages(
             conversationId: conversationId) ??
         [];
-    messages.clear();
     messages.addAll(messageList);
     print("Messages $messages");
     setState(() {});
@@ -215,7 +278,6 @@ class _ConversationState extends State<Conversation> {
 
   @override
   Widget build(BuildContext context) {
-    print("Build");
     return Scaffold(
       appBar: AppBar(
         elevation: 10,
@@ -240,8 +302,8 @@ class _ConversationState extends State<Conversation> {
         actions: [
           accessToken!.isNotEmpty
               ? IconButton(
-                  onPressed: () async {
-                    await getAllMessages();
+                  onPressed: () {
+                    getAllMessages();
                   },
                   icon: const Icon(Icons.refresh),
                   iconSize: 30,
@@ -249,8 +311,7 @@ class _ConversationState extends State<Conversation> {
               : Container(),
           accessToken!.isNotEmpty
               ? IconButton(
-                  onPressed: () async {
-                    unsubscribe();
+                  onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) {
@@ -261,8 +322,9 @@ class _ConversationState extends State<Conversation> {
                     ).then((data) {
                       subscribe();
                     });
+                    unsubscribe();
                   },
-                  icon: const Icon(Icons.message),
+                  icon: const Icon(Icons.chat),
                   iconSize: 30,
                 )
               : Container(),
@@ -310,20 +372,37 @@ class _ConversationState extends State<Conversation> {
                   : Container(),
               Expanded(
                   child: messages.isNotEmpty
-                      ? Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: ListView.builder(
-                            controller: _controller,
-                            shrinkWrap: true,
-                            itemCount: messages.length,
-                            itemBuilder: (context, index) {
-                              return getMessageView(
-                                  messages[index]["attributes"],
-                                  messages[index]["body"],
-                                  messages[index]["author"],
-                                  messages[index]["dateCreated"]);
-                            },
-                          ),
+                      ? Column(
+                          children: [
+                            Visibility(
+                              visible: isSendMedia,
+                              child: LinearProgressIndicator(
+                                value: _progress,
+                                minHeight:
+                                    20.0, // Set the height of the progress bar
+                              ),
+                            ),
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: ListView.builder(
+                                  controller: _controller,
+                                  shrinkWrap: true,
+                                  itemCount: messages.length,
+                                  itemBuilder: (context, index) {
+                                    List attachMedia =
+                                        messages[index]['attachMedia'];
+                                    return getMessageView(
+                                        messages[index]["attributes"],
+                                        messages[index]["body"],
+                                        messages[index]["author"],
+                                        messages[index]["dateCreated"],
+                                        attachMedia);
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
                         )
                       : const Center(
                           child: Text(
@@ -359,43 +438,50 @@ class _ConversationState extends State<Conversation> {
                                     ),
                                   ),
                                 ),
-                                IconButton(
-                                  onPressed: () async {
-                                    if (message.text.isNotEmpty) {
-                                      sendMessage();
-                                    } else {
-                                      showAlert("Please type your message");
-                                    }
-                                  },
-                                  icon: const Icon(
-                                    Icons.send,
-                                    color: Colors.white,
-                                  ),
-                                  iconSize: 30,
-                                ),
+                                isSendMedia
+                                    ? const CircularProgressIndicator()
+                                    : IconButton(
+                                        onPressed: () async {
+                                          if (message.text.isNotEmpty) {
+                                            sendMessage();
+                                          } else {
+                                            showAlert(
+                                                "Please type your message");
+                                          }
+                                        },
+                                        icon: const Icon(
+                                          Icons.send,
+                                          color: Colors.white,
+                                        ),
+                                        iconSize: 30,
+                                      ),
                               ],
                             ),
                           ),
                         ),
-                        Container(
-                          decoration: const BoxDecoration(
-                              color: Colors.black, shape: BoxShape.circle),
-                          alignment: Alignment.center,
-                          child: IconButton(
-                            onPressed: () async {
-                              if (message.text.isNotEmpty) {
+                        isSendMedia
+                            ? const CircularProgressIndicator()
+                            : Container(
+                                decoration: const BoxDecoration(
+                                    color: Colors.black,
+                                    shape: BoxShape.circle),
+                                alignment: Alignment.center,
+                                child: IconButton(
+                                  onPressed: () async {
+                                    pickFileFromDevice();
+                                    /*if (message.text.isNotEmpty) {
                                 sendMessage(isSendAttribute: true);
                               } else {
                                 showAlert("Please type your message");
-                              }
-                            },
-                            icon: const Icon(
-                              Icons.attach_file,
-                              color: Colors.white,
-                            ),
-                            iconSize: 30,
-                          ),
-                        ),
+                              }*/
+                                  },
+                                  icon: const Icon(
+                                    Icons.attach_file,
+                                    color: Colors.white,
+                                  ),
+                                  iconSize: 30,
+                                ),
+                              ),
                       ],
                     )
                   : Container(),
@@ -406,15 +492,108 @@ class _ConversationState extends State<Conversation> {
     );
   }
 
-  getMessageView(String attribute, String message, String author, String date) {
-    DateTime tempDate =
-        DateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").parse(date, true);
-    // String timeAgo = Jiffy.parseFromDateTime(tempDate).fromNow();
-    String timeAgo = DateFormat("hh:mm a").format(tempDate.toLocal());
+  getMessageView(String attribute, String message, String author, String date,
+      List<dynamic>? attachMedia) {
+    String localDate = convertUTCToLocalChat(
+        utcDateTime: date,
+        inputDateFormat: formatterYYYYMMddTHHMMss,
+        outputDateFormat: formatterYYYYMMddTHHMMssSSS);
 
-    if (attribute.contains("url")) {
+    DateTime dateTime = formatterYYYYMMddTHHMMssSSS.parse(localDate);
+    String timeAgo;
+    timeAgo = Jiffy.parseFromDateTime(dateTime).fromNow();
+
+    if (attribute.contains("hasMedia")) {
+      String? mediaUrl;
+      String? contentType;
+      String? filename;
+      for (var media in attachMedia!) {
+        filename = media['filename'];
+        mediaUrl = media['mediaUrl'];
+        contentType = media['contentType'];
+        //String? sid = media['sid'];
+      }
+      return Align(
+        alignment:
+            author == identity ? Alignment.centerRight : Alignment.centerLeft,
+        child: Card(
+          margin: const EdgeInsets.all(10),
+          color: author == identity ? Colors.blue : Colors.black,
+          child: Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                mediaUrl != null && mediaUrl.isNotEmpty
+                    ? contentType == "application/pdf"
+                        ? Text(
+                            textAlign: TextAlign.end,
+                            filename ?? "",
+                            style: TextStyle(
+                                color: author == identity
+                                    ? Colors.white
+                                    : Colors.white,
+                                fontSize: 16),
+                          )
+                        : contentType == "video/mp4"
+                            ? Text(
+                                textAlign: TextAlign.end,
+                                filename ?? "",
+                                style: TextStyle(
+                                    color: author == identity
+                                        ? Colors.white
+                                        : Colors.white,
+                                    fontSize: 16),
+                              )
+                            : SizedBox(
+                                height: 200,
+                                width: 150,
+                                child: CachedNetworkImage(
+                                    imageUrl: mediaUrl,
+                                    imageBuilder: (context, imageProvider) =>
+                                        Container(
+                                          height: 200,
+                                          width: 150,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.rectangle,
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                            image: DecorationImage(
+                                              image: imageProvider,
+                                              fit: BoxFit.fill,
+                                            ),
+                                          ),
+                                        ),
+                                    placeholder: (context, url) => const Center(
+                                          child: CircularProgressIndicator(),
+                                        )),
+                              )
+                    : const SizedBox(),
+                message.isNotEmpty
+                    ? Text(
+                        textAlign: TextAlign.end,
+                        message,
+                        style: TextStyle(
+                            color: author == identity
+                                ? Colors.white
+                                : Colors.white,
+                            fontSize: 10),
+                      )
+                    : const SizedBox(),
+                Text(
+                  textAlign: TextAlign.end,
+                  timeAgo,
+                  style: TextStyle(
+                      color: author == identity ? Colors.white : Colors.white,
+                      fontSize: 10),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    } else if (attribute.contains("url")) {
       Map<String, String> attributeModel = Map.castFrom(json.decode(attribute));
-      //print(valueMap.runtimeType);
       if (attributeModel['url'] != null) {
         return Align(
           alignment:
@@ -444,7 +623,10 @@ class _ConversationState extends State<Conversation> {
                     Text(
                       textAlign: TextAlign.end,
                       timeAgo,
-                      style: const TextStyle(color: Colors.white, fontSize: 10),
+                      style: TextStyle(
+                          color:
+                              author == identity ? Colors.white : Colors.white,
+                          fontSize: 10),
                     ),
                   ],
                 ),
@@ -472,7 +654,9 @@ class _ConversationState extends State<Conversation> {
                   Text(
                     textAlign: TextAlign.end,
                     timeAgo,
-                    style: const TextStyle(color: Colors.grey, fontSize: 10),
+                    style: TextStyle(
+                        color: author == identity ? Colors.blue : Colors.black,
+                        fontSize: 10),
                   ),
                 ],
               ),
@@ -500,13 +684,31 @@ class _ConversationState extends State<Conversation> {
                 Text(
                   timeAgo,
                   textAlign: TextAlign.end,
-                  style: const TextStyle(color: Colors.grey, fontSize: 10),
+                  style: TextStyle(
+                      color: author == identity ? Colors.blue : Colors.black,
+                      fontSize: 10),
                 ),
               ],
             ),
           ),
         ),
       );
+    }
+  }
+
+  String convertUTCToLocalChat(
+      {required String utcDateTime,
+      required DateFormat inputDateFormat,
+      required DateFormat outputDateFormat}) {
+    try {
+      // Parse the UTC date string
+      DateTime utcDate = inputDateFormat.parseUtc(utcDateTime);
+      String inputLocalDate = inputDateFormat.format(utcDate.toLocal());
+      DateTime outputLocalDateTime = inputDateFormat.parse(inputLocalDate);
+      return outputDateFormat.format(outputLocalDateTime).toString();
+    } catch (e) {
+      debugPrint(e.toString());
+      return utcDateTime;
     }
   }
 
@@ -524,5 +726,40 @@ class _ConversationState extends State<Conversation> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(message),
     ));
+  }
+
+  Future pickFileFromDevice() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['jpg', 'jpeg', 'pdf', 'png', 'doc', 'docx'],
+    );
+
+    if (result != null &&
+            result.files.single.path!
+                .isNotEmpty /*&&
+            result.files.single.path!.contains(".pdf") ||
+        result!.files.single.path!.contains(".jpg") ||
+        result.files.single.path!.contains(".jpeg") ||
+        result.files.single.path!.contains(".png") ||
+        result.files.single.path!.contains(".doc") ||
+        result.files.single.path!.contains(".docx")*/
+        ) {
+      selectedDocPath = result.files.single.path!;
+      fileName = result.files.single.name;
+      totalBytes = result.files.single.size;
+      debugPrint("Selected file path: $selectedDocPath");
+      isSendMedia = true;
+      setState(() {});
+      await sendMessageWithMedia();
+    } else {
+      debugPrint("File picking canceled.");
+    }
+  }
+
+  String getMimeType(String filePath) {
+    // Use the lookupMimeType function from the mime package
+    String? mimeType = lookupMimeType(filePath);
+    // Return the detected MIME type or default to "application/octet-stream"
+    return mimeType ?? "application/octet-stream";
   }
 }

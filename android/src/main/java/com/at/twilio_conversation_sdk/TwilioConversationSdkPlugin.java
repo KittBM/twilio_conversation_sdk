@@ -75,6 +75,10 @@ public class TwilioConversationSdkPlugin implements FlutterPlugin, MethodCallHan
             case Methods.registerFCMToken:
                 ConversationHandler.registerFCMToken(call.argument("fcmToken"), result);
                 break;
+            //UnRegister FCM Token#
+            case Methods.unregisterFCMToken:
+                ConversationHandler.unregisterFCMToken(call.argument("fcmToken"), result);
+                break;
             // Create new conversation #
             case Methods.createConversation:
                 ConversationHandler.createConversation(call.argument("conversationName"), call.argument("identity"), result);
@@ -90,7 +94,7 @@ public class TwilioConversationSdkPlugin implements FlutterPlugin, MethodCallHan
                 ConversationHandler.getLastMessages(call.argument("conversationId"), result);
                 //result.success(getLastMessagesList);
                 break;
-                // Get list of conversations for logged in user last message#
+            // Get list of conversations for logged in user last message#
             case Methods.getUnReadMsgCount:
                 ///List<Map<String, Object>> getLastMessagesList =
                 ConversationHandler.getUnReadMsgCount(call.argument("conversationId"), result);
@@ -108,6 +112,18 @@ public class TwilioConversationSdkPlugin implements FlutterPlugin, MethodCallHan
             // Send message #
             case Methods.sendMessage:
                 ConversationHandler.sendMessages(call.argument("message"), call.argument("conversationId"), call.argument("attribute"), result);
+                break;
+            // Send message with media #
+            case Methods.sendMessageWithMedia:
+                ConversationHandler.sendMessageWithMedia(
+                        call.argument("message"),
+                        call.argument("conversationId"),
+                        call.argument("attribute"),
+                        call.argument("mediaFilePath"),
+                        call.argument("mimeType"),
+                        call.argument("fileName"),
+                        result
+                );
                 break;
             // Add participant in a conversation #
             case Methods.addParticipant:

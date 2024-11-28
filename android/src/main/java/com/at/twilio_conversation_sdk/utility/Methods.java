@@ -4,11 +4,13 @@ public class Methods {
     /// The method channel name used to interact with the native platform.
     public final static String generateToken = "generateToken";
     public final static String registerFCMToken = "registerFCMToken";
+    public final static String unregisterFCMToken = "unregisterFCMToken";
     public final static String createConversation = "createConversation";
     public final static String getConversations = "getConversations";
     public final static String getMessages = "getMessages";
     public final static String joinConversation = "joinConversation";
     public final static String sendMessage = "sendMessage";
+    public final static String sendMessageWithMedia = "sendMessageWithMedia";
     public final static String addParticipant = "addParticipant";
     public final static String removeParticipant = "removeParticipant";
     public final static String receiveMessages = "receiveMessages";

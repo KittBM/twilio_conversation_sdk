@@ -23,6 +23,7 @@ public class Strings {
     public final static  String accessTokenRefreshed = "Access token refreshed";
 
     public final static String fcmSuccess = "FCM Registered Successful";
+    public final static String fcmUnSuccess = "FCM UnRegistered Successful";
     public final static String fcmFail = "FCM Registered Fail";
 
 }

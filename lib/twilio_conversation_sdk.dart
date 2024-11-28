@@ -5,14 +5,6 @@ import 'package:flutter/services.dart';
 import 'twilio_conversation_sdk_platform_interface.dart';
 
 class TwilioConversationSdk {
-  TwilioConversationSdk() {
-    _init();
-  }
-
-  void _init() {
-    print('TwilioConversationSdk Initialization');
-  }
-
   Future<String?> getPlatformVersion() {
     return TwilioConversationSdkPlatform.instance.getPlatformVersion();
   }
@@ -26,7 +18,7 @@ class TwilioConversationSdk {
       EventChannel('twilio_conversation_sdk/onClientSynchronizationChanged');
 
   // Stream controllers for message updates and token status changes.
-  static final StreamController<Map> messageUpdateController =
+  static final StreamController<Map> _messageUpdateController =
       StreamController<Map>.broadcast();
   static final StreamController<Map> _tokenStatusController =
       StreamController<Map>.broadcast();
@@ -34,7 +26,7 @@ class TwilioConversationSdk {
       StreamController<Map>.broadcast();
 
   /// Stream for receiving incoming messages.
-  Stream<Map> get onMessageReceived => messageUpdateController.stream;
+  Stream<Map> get onMessageReceived => _messageUpdateController.stream;
 
   /// Stream for client synchronous status.
   Stream<Map> get onClientSyncStatusChanged => _clientStatusController.stream;
@@ -87,6 +79,18 @@ class TwilioConversationSdk {
   /// Returns a [String] indicating the result of the operation, or `null` if it fails.
   Future<String?> registerFCMToken({required String fcmToken}) {
     return TwilioConversationSdkPlatform.instance.registerFCMToken(fcmToken: fcmToken);
+  }
+
+  /// UnRegister FCM Token
+  ///
+  /// This method un register fcm token against identity.
+  ///
+  /// - [fcmToken]: FCM Token received from firebase.
+  ///
+  /// Returns a [String] indicating the result of the operation, or `null` if it fails.
+  Future<String?> unregisterFCMToken({required String fcmToken}) {
+    return TwilioConversationSdkPlatform.instance
+        .unregisterFCMToken(fcmToken: fcmToken);
   }
 
   /// Creates a new conversation.
@@ -172,6 +176,30 @@ class TwilioConversationSdk {
         conversationId: conversationId, message: message, attribute: attribute);
   }
 
+  /// Sends a message with media in a conversation.
+  ///
+  /// This method sends a message in the specified conversation.
+  ///
+  /// - [message]: The message content to send.
+  /// - [conversationId]: The ID of the conversation in which to send the message.
+  ///
+  /// Returns a [String] indicating the result of the operation, or `null` if it fails.
+  Future<String?> sendMessageWithMedia(
+      {required message,
+      required conversationId,
+      required attribute,
+      required mediaFilePath,
+      required mimeType,
+      required fileName}) {
+    return TwilioConversationSdkPlatform.instance.sendMessageWithMedia(
+        message: message,
+        conversationId: conversationId,
+        attribute: attribute,
+        mediaFilePath: mediaFilePath,
+        mimeType: mimeType,
+        fileName: fileName);
+  }
+
   /// Adds a participant in a conversation.
   ///
   /// - [participantName]: The name of the participant to be added.
@@ -219,10 +247,19 @@ class TwilioConversationSdk {
         .listen((dynamic message) {
       if (message != null) {
         if (message["author"] != null && message["body"] != null) {
-          messageUpdateController.add(message);
+          _messageUpdateController.add(message);
         }
         if (message["status"] != null) {
-          messageUpdateController.add(message);
+          _messageUpdateController.add(message);
+        }
+        if (message["mediaStatus"] != null) {
+          _messageUpdateController.add(message);
+        }
+        if (message["messageStatus"] != null) {
+          _messageUpdateController.add(message);
+        }
+        if (message["bytesSent"] != null) {
+          _messageUpdateController.add(message);
         }
       }
     });

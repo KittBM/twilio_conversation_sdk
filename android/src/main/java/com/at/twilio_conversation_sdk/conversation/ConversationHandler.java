@@ -1,5 +1,7 @@
 package com.at.twilio_conversation_sdk.conversation;
 
+import static org.apache.commons.io.FileUtils.openInputStream;
+
 import androidx.annotation.NonNull;
 
 import com.at.twilio_conversation_sdk.app_interface.AccessTokenInterface;
@@ -12,6 +14,8 @@ import com.twilio.conversations.Conversation;
 import com.twilio.conversations.ConversationListener;
 import com.twilio.conversations.ConversationsClient;
 import com.twilio.conversations.ConversationsClientListener;
+import com.twilio.conversations.Media;
+import com.twilio.conversations.MediaUploadListener;
 import com.twilio.conversations.Message;
 import com.twilio.conversations.Participant;
 import com.twilio.conversations.StatusListener;
@@ -23,6 +27,11 @@ import com.twilio.util.ErrorInfo;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -68,6 +77,22 @@ public class ConversationHandler {
             @Override
             public void onSuccess() {
                 result.success(Strings.fcmSuccess);
+
+            }
+
+            @Override
+            public void onError(ErrorInfo errorInfo) {
+                StatusListener.super.onError(errorInfo);
+                result.success(Strings.fcmFail);
+            }
+        });
+    }
+
+    public static void unregisterFCMToken(String token, MethodChannel.Result result) {
+        conversationClient.unregisterFCMToken(new ConversationsClient.FCMToken(token), new StatusListener() {
+            @Override
+            public void onSuccess() {
+                result.success(Strings.fcmUnSuccess);
 
             }
 
@@ -223,6 +248,102 @@ public class ConversationHandler {
         });
     }
 
+    /// Send message #
+    public static void sendMessageWithMedia(String enteredMessage, String conversationId, HashMap attribute, String mediaFilePath, String mimeType, String fileName, MethodChannel.Result result) {
+        // Fetch the conversation using the conversationId
+        conversationClient.getConversation(conversationId, new CallbackListener<Conversation>() {
+            @Override
+            public void onSuccess(Conversation conversation) {
+                try {
+                    System.out.println("enteredMessage:" + enteredMessage);
+                    System.out.println("conversationId:" + conversationId);
+                    System.out.println("MediaFile:" + mediaFilePath);
+                    System.out.println("MediaType" + mimeType);
+                    System.out.println("MediaName" + fileName);
+                    // Prepare the message with media
+                    JSONObject jsonObject;
+                    jsonObject = new JSONObject(attribute);
+
+                    Attributes attributes = new Attributes(jsonObject);
+                    InputStream fileInputStream = null;
+                    if (mediaFilePath != null) {
+                        fileInputStream = openInputStream(new File(mediaFilePath));
+                    }
+                    //try (InputStream inputStream = new FileInputStream(file)) {
+                    assert fileInputStream != null;
+                    conversation.prepareMessage()
+                            .setAttributes(attributes)
+                            .setBody(enteredMessage)
+                            .addMedia(fileInputStream, mimeType, fileName, new MediaUploadListener() {
+                                @Override
+                                public void onStarted() {
+                                    System.out.println("Media onStarted:");
+                                }
+
+                                @Override
+                                public void onProgress(long bytesSent) {
+                                    System.out.println("Media upload progress: " + bytesSent);
+                                    HashMap<String, Object> progressData = new HashMap<>();
+                                    progressData.put("bytesSent", bytesSent);
+                                    triggerEvent(progressData);
+                                }
+
+                                @Override
+                                public void onCompleted(@NonNull String mediaSid) {
+                                    System.out.println("Media uploaded successfully with SID: " + mediaSid);
+                                    HashMap<String, Object> progressData = new HashMap<>();
+                                    progressData.put("mediaStatus", "Completed");
+                                    triggerEvent(progressData);
+                                }
+
+                                @Override
+                                public void onFailed(@NonNull ErrorInfo errorInfo) {
+                                    // Handle media upload failure
+                                    System.err.println("Media upload failed:" + errorInfo.getMessage());
+                                    HashMap<String, Object> progressData = new HashMap<>();
+                                    progressData.put("mediaStatus", "Failed");
+                                    triggerEvent(progressData);
+                                }
+                            })
+                            .buildAndSend(new CallbackListener() {
+                                @Override
+                                public void onSuccess(Object data) {
+                                    // Message sent successfully
+                                    System.out.println("Message sent successfully!");
+                                    result.success("send");
+                                }
+
+                                @Override
+                                public void onError(ErrorInfo errorInfo) {
+                                    // Handle message send error
+                                    System.err.println("Error sending message: " + errorInfo.getMessage());
+                                    //result.success("SendMessageError", errorInfo.getMessage(), null);
+                                    HashMap<String, Object> progressData = new HashMap<>();
+                                    progressData.put("messageStatus", "Failed");
+                                    triggerEvent(progressData);
+                                }
+                            });
+                    /*} catch (FileNotFoundException e) {
+                        System.err.println("File not found: " + e.getMessage());
+                    } catch (IOException e) {
+                        System.err.println("IO error: " + e.getMessage());
+                    }*/
+                } catch (Exception e) {
+                    // Handle exceptions (e.g., JSONException, FileNotFoundException)
+                    System.err.println("Error preparing message: " + e.getMessage());
+                    //result.error("PrepareMessageError", e.getMessage(), null);
+                }
+            }
+
+            @Override
+            public void onError(ErrorInfo errorInfo) {
+                // Handle error in fetching conversation
+                System.err.println("Error fetching conversation: " + errorInfo.getMessage());
+                //result.error("ConversationFetchError", errorInfo.getMessage(), null);
+            }
+        });
+    }
+
     /// Subscribe To Message Update #
     public static void subscribeToMessageUpdate(String conversationId) {
         conversationClient.getConversation(conversationId, new CallbackListener<Conversation>() {
@@ -232,7 +353,7 @@ public class ConversationHandler {
                 result.addListener(new ConversationListener() {
                     @Override
                     public void onMessageAdded(Message message) {
-                        try {
+                        /*try {
                             Map<String, Object> messageMap = new HashMap<>();
                             messageMap.put("sid", message.getSid());
                             messageMap.put("author", message.getAuthor());
@@ -240,6 +361,15 @@ public class ConversationHandler {
                             messageMap.put("attributes", message.getAttributes().toString());
                             messageMap.put("dateCreated", message.getDateCreated());
                             System.out.println("messageMap- onMessageAdded");
+                            for (Media media : message.getAttachedMedia()) {
+                                media.getTemporaryContentUrl(new CallbackListener<String>() {
+                                    @Override
+                                    public void onSuccess(String mediaUrl) {
+                                        System.out.println("messageMap- onMessageAdded  AttachedMedia getTemporaryContentUrl: " + mediaUrl);
+                                        messageMap.put("mediaUrl", mediaUrl);
+                                    }
+                                });
+                            }
                             triggerEvent(messageMap);
 
                             result.setLastReadMessageIndex(result.getLastMessageIndex() + 1, new CallbackListener<Long>() {
@@ -251,6 +381,81 @@ public class ConversationHandler {
 
                         } catch (Exception e) {
                             //System.out.println("Exception-"+e.getMessage());
+                        }*/
+
+                        //new code for attach media check
+                        try {
+                            Map<String, Object> messageMap = new HashMap<>();
+                            messageMap.put("sid", message.getSid());
+                            messageMap.put("author", message.getAuthor());
+                            messageMap.put("body", message.getBody());
+                            messageMap.put("attributes", message.getAttributes().toString());
+                            messageMap.put("dateCreated", message.getDateCreated());
+
+                            List<Map<String, Object>> mediaList = new ArrayList<>();
+                            int[] pendingMediaCount = {0}; // Counter to track pending URL fetches
+
+                            for (Media media : message.getAttachedMedia()) {
+                                Map<String, Object> mediaMap = new HashMap<>();
+                                mediaMap.put("sid", media.getSid());
+                                mediaMap.put("contentType", media.getContentType());
+                                mediaMap.put("filename", media.getFilename());
+
+                                // Increment pending media count
+                                synchronized (pendingMediaCount) {
+                                    pendingMediaCount[0]++;
+                                }
+
+                                media.getTemporaryContentUrl(new CallbackListener<String>() {
+                                    @Override
+                                    public void onSuccess(String mediaUrl) {
+                                        mediaMap.put("mediaUrl", mediaUrl);
+                                        mediaList.add(mediaMap);
+
+                                        // Decrement pending media count and check completion
+                                        synchronized (pendingMediaCount) {
+                                            pendingMediaCount[0]--;
+                                            if (pendingMediaCount[0] == 0) {
+                                                messageMap.put("attachMedia", mediaList);
+                                                triggerEvent(messageMap); // Trigger event when all URLs are fetched
+                                            }
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onError(ErrorInfo errorInfo) {
+                                        System.err.println("Error retrieving media URL: " + errorInfo.getMessage());
+
+                                        // Decrement pending media count and check completion
+                                        synchronized (pendingMediaCount) {
+                                            pendingMediaCount[0]--;
+                                            if (pendingMediaCount[0] == 0) {
+                                                messageMap.put("attachMedia", mediaList);
+                                                triggerEvent(messageMap); // Trigger event even if there are errors
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+
+                            // If no media to fetch, trigger the event immediately
+                            synchronized (pendingMediaCount) {
+                                if (pendingMediaCount[0] == 0) {
+                                    messageMap.put("attachMedia", mediaList);
+                                    triggerEvent(messageMap);
+                                }
+                            }
+
+                            // Update the last read message index
+                            result.setLastReadMessageIndex(result.getLastMessageIndex() + 1, new CallbackListener<Long>() {
+                                @Override
+                                public void onSuccess(Long result) {
+                                    System.out.println("LastReadMessageIndex- " + result);
+                                }
+                            });
+
+                        } catch (Exception e) {
+                            System.err.println("Exception: " + e.getMessage());
                         }
                     }
 
@@ -444,7 +649,7 @@ public class ConversationHandler {
     }
 
     /// Get messages from the specific conversation #
-    public static void getAllMessages(String conversationId, Integer messageCount, MethodChannel.Result result) {
+    /*public static void getAllMessages(String conversationId, Integer messageCount, MethodChannel.Result result) {
         List<Map<String, Object>> list = new ArrayList<>();
         conversationClient.getConversation(conversationId, new CallbackListener<Conversation>() {
             @Override
@@ -459,7 +664,22 @@ public class ConversationHandler {
                             messagesMap.put("body", messagesList.get(i).getBody());
                             messagesMap.put("attributes", messagesList.get(i).getAttributes().toString());
                             messagesMap.put("dateCreated", messagesList.get(i).getDateCreated());
+
                             list.add(messagesMap);
+
+                            for (Media media : messagesList.get(i).getAttachedMedia()) {
+                                System.out.println("AttachedMedia getSid: " + media.getSid());
+                                System.out.println("AttachedMedia getContentType: " + media.getContentType());
+                                System.out.println("AttachedMedia getSize: " + media.getSize());
+                                System.out.println("AttachedMedia getFilename: " + media.getFilename());
+                                System.out.println("AttachedMedia getCategory: " + media.getCategory());
+                                media.getTemporaryContentUrl(new CallbackListener<String>() {
+                                    @Override
+                                    public void onSuccess(String mediaUrl) {
+                                        System.out.println("AttachedMedia getTemporaryContentUrl: " + mediaUrl);
+                                    }
+                                });
+                            }
                         }
                         if (!list.isEmpty()) {
                             conversation.setLastReadMessageIndex(conversation.getLastMessageIndex(), new CallbackListener<Long>() {
@@ -486,7 +706,98 @@ public class ConversationHandler {
                 CallbackListener.super.onError(errorInfo);
             }
         });
+    }*/
+
+    public static void getAllMessages(String conversationId, Integer messageCount, MethodChannel.Result result) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        conversationClient.getConversation(conversationId, new CallbackListener<Conversation>() {
+            @Override
+            public void onSuccess(Conversation conversation) {
+                conversation.getLastMessages((messageCount != null) ? messageCount : 1000, new CallbackListener<List<Message>>() {
+                    @Override
+                    public void onSuccess(List<Message> messagesList) {
+                        int[] pendingMediaCount = {0}; // Counter for pending media URL fetches
+
+                        for (Message message : messagesList) {
+                            Map<String, Object> messagesMap = new HashMap<>();
+                            messagesMap.put("sid", message.getSid());
+                            messagesMap.put("author", message.getAuthor());
+                            messagesMap.put("body", message.getBody());
+                            messagesMap.put("attributes", message.getAttributes().toString());
+                            messagesMap.put("dateCreated", message.getDateCreated());
+
+                            List<Map<String, Object>> mediaList = new ArrayList<>();
+
+                            for (Media media : message.getAttachedMedia()) {
+                                Map<String, Object> mediaMap = new HashMap<>();
+                                mediaMap.put("sid", media.getSid());
+                                mediaMap.put("contentType", media.getContentType());
+                                mediaMap.put("filename", media.getFilename());
+
+                                // Increment the pending media counter
+                                synchronized (pendingMediaCount) {
+                                    pendingMediaCount[0]++;
+                                }
+
+                                media.getTemporaryContentUrl(new CallbackListener<String>() {
+                                    @Override
+                                    public void onSuccess(String mediaUrl) {
+                                        mediaMap.put("mediaUrl", mediaUrl);
+
+                                        // Decrement the pending media counter
+                                        synchronized (pendingMediaCount) {
+                                            pendingMediaCount[0]--;
+                                            if (pendingMediaCount[0] == 0) {
+                                                result.success(list); // All media URLs fetched
+                                            }
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onError(ErrorInfo errorInfo) {
+                                        System.err.println("Error retrieving media URL: " + errorInfo.getMessage());
+
+                                        // Decrement the pending media counter
+                                        synchronized (pendingMediaCount) {
+                                            pendingMediaCount[0]--;
+                                            if (pendingMediaCount[0] == 0) {
+                                                result.success(list); // All media URLs fetched
+                                            }
+                                        }
+                                    }
+                                });
+
+                                mediaList.add(mediaMap);
+                            }
+
+                            messagesMap.put("attachMedia", mediaList);
+                            list.add(messagesMap);
+                        }
+
+                        // Check if there are no pending media URLs
+                        synchronized (pendingMediaCount) {
+                            if (pendingMediaCount[0] == 0) {
+                                result.success(list);
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onError(ErrorInfo errorInfo) {
+                        System.err.println("Error retrieving messages: " + errorInfo.getMessage());
+                        //result.error("MESSAGE_RETRIEVAL_ERROR", errorInfo.getMessage(), null);
+                    }
+                });
+            }
+
+            @Override
+            public void onError(ErrorInfo errorInfo) {
+                System.err.println("Error retrieving conversation: " + errorInfo.getMessage());
+                //result.error("CONVERSATION_RETRIEVAL_ERROR", errorInfo.getMessage(), null);
+            }
+        });
     }
+
 
     public static void initializeConversationClient(String accessToken, MethodChannel.Result result, ClientInterface clientInterface) {
         ConversationsClient.Properties props = ConversationsClient.Properties.newBuilder().createProperties();

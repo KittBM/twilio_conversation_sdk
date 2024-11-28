@@ -45,6 +45,14 @@ class MethodChannelTwilioConversationSdk extends TwilioConversationSdkPlatform {
     return result;
   }
 
+  /// UnRegister FCM Token #
+  @override
+  Future<String?> unregisterFCMToken({required String fcmToken}) async {
+    final result = await methodChannel
+        .invokeMethod<String>('unregisterFCMToken', {"fcmToken": fcmToken});
+    return result;
+  }
+
   /// Create new conversation #
   @override
   Future<String?> createConversation(
@@ -71,7 +79,7 @@ class MethodChannelTwilioConversationSdk extends TwilioConversationSdkPlatform {
         {"conversationId": conversationId});
     return lastMessageList ?? [];
   }
-  
+
   /// Get list of conversations for logged in user last message unread count#
   @override
   Future<List?> getUnReadMsgCount({required String conversationId}) async {
@@ -115,6 +123,28 @@ class MethodChannelTwilioConversationSdk extends TwilioConversationSdkPlatform {
         });
     return result ?? "";
   }
+
+  /// Send message with media #
+  @override
+  Future<String?> sendMessageWithMedia({ required String message,
+    required String conversationId,
+    dynamic attribute,
+    required String mediaFilePath,
+    required String mimeType,
+    required String fileName}) async {
+    final String? result = await methodChannel.invokeMethod<String>(
+        'sendMessageWithMedia',
+        {
+          "message": message,
+          "conversationId": conversationId,
+          "attribute": attribute,
+          "mediaFilePath": mediaFilePath,
+          "mimeType": mimeType,
+          "fileName": fileName,
+        });
+    return result ?? "Something Wrong in SendMediaMessage";
+  }
+
 
   /// Add participant in a conversation #
   @override

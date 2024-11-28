@@ -1,3 +1,6 @@
+## 0.1.7
+Media Upload Functionality
+
 ## 0.1.6
 Formatting
 

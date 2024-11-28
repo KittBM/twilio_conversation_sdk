@@ -1,3 +1,6 @@
+## 0.1.6
+Formatting
+
 ## 0.1.5
 iOS date related issue resolved
 

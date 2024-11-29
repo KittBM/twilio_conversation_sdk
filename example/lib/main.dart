@@ -37,13 +37,14 @@ class Conversation extends StatefulWidget {
 }
 
 class _ConversationState extends State<Conversation> {
-  static var accountSid = '';
-  static var apiKey = '';
-  static var apiSecret = '';
-  static var serviceSid = ''; // Conversation Service SID
+  static var accountSid = 'ACe78f25b098b2a7e1bd7a62e1faa62eb1';
+  static var apiKey = 'SKd8e02fa8a99bd970be61ec7d5fae1d6b';
+  static var apiSecret = 'dwJUkXo0mysOXKKAPhG0UduNWf4MKVX8';
+  static var serviceSid =
+      'IS8522285db9e3482986f846d12dc31381'; // Conversation Service SID
   static var identity = 'DevChat';
   static var participantIdentity = 'DevUserTwo';
-  static var pushSid = '';
+  static var pushSid = 'CRb0b18e1d600411634fd4b51e13d8e008';
   String? accessToken = "";
 
   final _twilioConversationSdkPlugin = TwilioConversationSdk();
@@ -233,13 +234,14 @@ class _ConversationState extends State<Conversation> {
 
     attribute = {"hasMedia": true};
 
-    final String? sendMessage = await _twilioConversationSdkPlugin.sendMessageWithMedia(
-        message: "",
-        conversationId: conversationId,
-        attribute: attribute,
-        mediaFilePath: selectedDocPath,
-        mimeType: getMimeType(selectedDocPath),
-        fileName: fileName);
+    final String? sendMessage =
+        await _twilioConversationSdkPlugin.sendMessageWithMedia(
+            message: "",
+            conversationId: conversationId,
+            attribute: attribute,
+            mediaFilePath: selectedDocPath,
+            mimeType: getMimeType(selectedDocPath),
+            fileName: fileName);
     print("Result $sendMessage");
     _progress = 0;
     totalBytes = 0;
@@ -507,51 +509,48 @@ class _ConversationState extends State<Conversation> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 mediaUrl != null && mediaUrl.isNotEmpty
-                    ? contentType == "application/pdf"
+                    ? contentType == "application/pdf" ||
+                            contentType == "video/mp4"
                         ? Text(
                             textAlign: TextAlign.end,
                             filename ?? "",
                             style: TextStyle(
-                                color: author == identity ? Colors.white : Colors.white,
+                                color: author == identity
+                                    ? Colors.white
+                                    : Colors.white,
                                 fontSize: 16),
                           )
-                        : contentType == "video/mp4"
-                            ? Text(
-                                textAlign: TextAlign.end,
-                                filename ?? "",
-                                style: TextStyle(
-                                    color:
-                                        author == identity ? Colors.white : Colors.white,
-                                    fontSize: 16),
-                              )
-                            : SizedBox(
-                                height: 200,
-                                width: 150,
-                                child: CachedNetworkImage(
-                                    imageUrl: mediaUrl,
-                                    imageBuilder: (context, imageProvider) => Container(
-                                          height: 200,
-                                          width: 150,
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.rectangle,
-                                            borderRadius: BorderRadius.circular(10),
-                                            image: DecorationImage(
-                                              image: imageProvider,
-                                              fit: BoxFit.fill,
-                                            ),
-                                          ),
+                        : SizedBox(
+                            height: 200,
+                            width: 150,
+                            child: CachedNetworkImage(
+                                imageUrl: mediaUrl,
+                                imageBuilder: (context, imageProvider) =>
+                                    Container(
+                                      height: 200,
+                                      width: 150,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.rectangle,
+                                        borderRadius: BorderRadius.circular(10),
+                                        image: DecorationImage(
+                                          image: imageProvider,
+                                          fit: BoxFit.fill,
                                         ),
-                                    placeholder: (context, url) => const Center(
-                                          child: CircularProgressIndicator(),
-                                        )),
-                              )
+                                      ),
+                                    ),
+                                placeholder: (context, url) => const Center(
+                                      child: CircularProgressIndicator(),
+                                    )),
+                          )
                     : const SizedBox(),
                 message.isNotEmpty
                     ? Text(
                         textAlign: TextAlign.end,
                         message,
                         style: TextStyle(
-                            color: author == identity ? Colors.white : Colors.white,
+                            color: author == identity
+                                ? Colors.white
+                                : Colors.white,
                             fontSize: 10),
                       )
                     : const SizedBox(),
@@ -571,7 +570,8 @@ class _ConversationState extends State<Conversation> {
       Map<String, String> attributeModel = Map.castFrom(json.decode(attribute));
       if (attributeModel['url'] != null) {
         return Align(
-          alignment: author == identity ? Alignment.centerRight : Alignment.centerLeft,
+          alignment:
+              author == identity ? Alignment.centerRight : Alignment.centerLeft,
           child: Card(
             margin: const EdgeInsets.all(10),
             color: author == identity ? Colors.blue : Colors.black,
@@ -588,7 +588,9 @@ class _ConversationState extends State<Conversation> {
                         textAlign: TextAlign.center,
                         attributeModel['url']!,
                         style: TextStyle(
-                            color: author == identity ? Colors.white : Colors.white,
+                            color: author == identity
+                                ? Colors.white
+                                : Colors.white,
                             fontSize: 14),
                       ),
                     ),
@@ -596,7 +598,8 @@ class _ConversationState extends State<Conversation> {
                       textAlign: TextAlign.end,
                       timeAgo,
                       style: TextStyle(
-                          color: author == identity ? Colors.white : Colors.white,
+                          color:
+                              author == identity ? Colors.white : Colors.white,
                           fontSize: 10),
                     ),
                   ],
@@ -607,7 +610,8 @@ class _ConversationState extends State<Conversation> {
         );
       } else {
         return Align(
-          alignment: author == identity ? Alignment.centerRight : Alignment.centerLeft,
+          alignment:
+              author == identity ? Alignment.centerRight : Alignment.centerLeft,
           child: Card(
             margin: const EdgeInsets.all(10),
             child: Padding(
@@ -636,7 +640,8 @@ class _ConversationState extends State<Conversation> {
       }
     } else {
       return Align(
-        alignment: author == identity ? Alignment.centerRight : Alignment.centerLeft,
+        alignment:
+            author == identity ? Alignment.centerRight : Alignment.centerLeft,
         child: Card(
           margin: const EdgeInsets.all(10),
           child: Padding(

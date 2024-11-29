@@ -772,6 +772,14 @@ public class ConversationHandler {
 
                             messagesMap.put("attachMedia", mediaList);
                             list.add(messagesMap);
+                            if (!list.isEmpty()) {
+                                conversation.setLastReadMessageIndex(conversation.getLastMessageIndex(), new CallbackListener<Long>() {
+                                    @Override
+                                    public void onSuccess(Long result) {
+
+                                    }
+                                });
+                            }
                         }
 
                         // Check if there are no pending media URLs
@@ -914,7 +922,7 @@ public class ConversationHandler {
 
             @Override
             public void onError(ErrorInfo errorInfo) {
-                System.out.println("Error " +errorInfo);
+                System.out.println("Error " + errorInfo);
                 result.success(Strings.authenticationFailed);
             }
         });

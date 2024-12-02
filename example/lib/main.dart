@@ -40,10 +40,9 @@ class _ConversationState extends State<Conversation> {
   static var accountSid = '';
   static var apiKey = '';
   static var apiSecret = '';
-  static var serviceSid =
-      ''; // Conversation Service SID
-  static var identity = '';
-  static var participantIdentity = '';
+  static var serviceSid = ''; // Conversation Service SID
+  static var identity = 'DevChat';
+  static var participantIdentity = 'DevUserTwo';
   static var pushSid = '';
   String? accessToken = "";
 
@@ -234,14 +233,13 @@ class _ConversationState extends State<Conversation> {
 
     attribute = {"hasMedia": true};
 
-    final String? sendMessage =
-        await _twilioConversationSdkPlugin.sendMessageWithMedia(
-            message: "",
-            conversationId: conversationId,
-            attribute: attribute,
-            mediaFilePath: selectedDocPath,
-            mimeType: getMimeType(selectedDocPath),
-            fileName: fileName);
+    final String? sendMessage = await _twilioConversationSdkPlugin.sendMessageWithMedia(
+        message: "",
+        conversationId: conversationId,
+        attribute: attribute,
+        mediaFilePath: selectedDocPath,
+        mimeType: getMimeType(selectedDocPath),
+        fileName: fileName);
     print("Result $sendMessage");
     _progress = 0;
     totalBytes = 0;
@@ -509,15 +507,12 @@ class _ConversationState extends State<Conversation> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 mediaUrl != null && mediaUrl.isNotEmpty
-                    ? contentType == "application/pdf" ||
-                            contentType == "video/mp4"
+                    ? contentType == "application/pdf" || contentType == "video/mp4"
                         ? Text(
                             textAlign: TextAlign.end,
                             filename ?? "",
                             style: TextStyle(
-                                color: author == identity
-                                    ? Colors.white
-                                    : Colors.white,
+                                color: author == identity ? Colors.white : Colors.white,
                                 fontSize: 16),
                           )
                         : SizedBox(
@@ -525,8 +520,7 @@ class _ConversationState extends State<Conversation> {
                             width: 150,
                             child: CachedNetworkImage(
                                 imageUrl: mediaUrl,
-                                imageBuilder: (context, imageProvider) =>
-                                    Container(
+                                imageBuilder: (context, imageProvider) => Container(
                                       height: 200,
                                       width: 150,
                                       decoration: BoxDecoration(
@@ -548,9 +542,7 @@ class _ConversationState extends State<Conversation> {
                         textAlign: TextAlign.end,
                         message,
                         style: TextStyle(
-                            color: author == identity
-                                ? Colors.white
-                                : Colors.white,
+                            color: author == identity ? Colors.white : Colors.white,
                             fontSize: 10),
                       )
                     : const SizedBox(),
@@ -570,8 +562,7 @@ class _ConversationState extends State<Conversation> {
       Map<String, String> attributeModel = Map.castFrom(json.decode(attribute));
       if (attributeModel['url'] != null) {
         return Align(
-          alignment:
-              author == identity ? Alignment.centerRight : Alignment.centerLeft,
+          alignment: author == identity ? Alignment.centerRight : Alignment.centerLeft,
           child: Card(
             margin: const EdgeInsets.all(10),
             color: author == identity ? Colors.blue : Colors.black,
@@ -588,9 +579,7 @@ class _ConversationState extends State<Conversation> {
                         textAlign: TextAlign.center,
                         attributeModel['url']!,
                         style: TextStyle(
-                            color: author == identity
-                                ? Colors.white
-                                : Colors.white,
+                            color: author == identity ? Colors.white : Colors.white,
                             fontSize: 14),
                       ),
                     ),
@@ -598,8 +587,7 @@ class _ConversationState extends State<Conversation> {
                       textAlign: TextAlign.end,
                       timeAgo,
                       style: TextStyle(
-                          color:
-                              author == identity ? Colors.white : Colors.white,
+                          color: author == identity ? Colors.white : Colors.white,
                           fontSize: 10),
                     ),
                   ],
@@ -610,8 +598,7 @@ class _ConversationState extends State<Conversation> {
         );
       } else {
         return Align(
-          alignment:
-              author == identity ? Alignment.centerRight : Alignment.centerLeft,
+          alignment: author == identity ? Alignment.centerRight : Alignment.centerLeft,
           child: Card(
             margin: const EdgeInsets.all(10),
             child: Padding(
@@ -640,8 +627,7 @@ class _ConversationState extends State<Conversation> {
       }
     } else {
       return Align(
-        alignment:
-            author == identity ? Alignment.centerRight : Alignment.centerLeft,
+        alignment: author == identity ? Alignment.centerRight : Alignment.centerLeft,
         child: Card(
           margin: const EdgeInsets.all(10),
           child: Padding(

@@ -1,3 +1,9 @@
+## 0.1.9
+iOS Minor Bug Fixes
+
+## 0.1.8
+Minor Bug Fixes
+
 ## 0.1.7
 Media Upload Functionality
 

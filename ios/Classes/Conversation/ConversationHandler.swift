@@ -70,6 +70,7 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
              print("Device push token registration was\(result.isSuccessful ? "" : " not") successful")
          })
      }
+   
     
     func conversationsClient(_ client: TwilioConversationsClient, conversation: TCHConversation, synchronizationStatusUpdated status: TCHConversationSynchronizationStatus) {
 //        self.messageDelegate?.onSynchronizationChanged(status: ["status" : conversation.synchronizationStatus.rawValue])
@@ -301,6 +302,33 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
             }
         }
     }
+    
+    
+    func getUnReadMsgCount(conversationId: String, _ completion: @escaping ([[String: Any]]?) -> Void) {
+        var list: [[String: Any]] = []
+        
+        self.getConversationFromId(conversationId: conversationId) { conversation in
+            var dictionary: [String: Any] = [:]
+            conversation?.getUnreadMessagesCount(completion: { result, count in
+                if result.isSuccessful {
+                    list.removeAll()
+                    print("Total Unread Count \(count)")
+                    dictionary["sid"] = conversationId
+                    dictionary["unReadCount"] = count
+                    list.append(dictionary)
+                completion(list)
+                }
+                else{
+                    print("No Unread Count")
+                    dictionary["sid"] = conversationId
+                    dictionary["unReadCount"] = 0
+                    completion(list)
+                }
+            })
+        }
+    }
+
+
     
     func getMessageInDictionary(_ message:TCHMessage,_ completion: @escaping([String: Any]?) -> Void) {
         var dictionary: [String: Any] = [:]

@@ -37,14 +37,14 @@ class Conversation extends StatefulWidget {
 }
 
 class _ConversationState extends State<Conversation> {
-  static var accountSid = 'ACe78f25b098b2a7e1bd7a62e1faa62eb1';
-  static var apiKey = 'SKd8e02fa8a99bd970be61ec7d5fae1d6b';
-  static var apiSecret = 'dwJUkXo0mysOXKKAPhG0UduNWf4MKVX8';
+  static var accountSid = '';
+  static var apiKey = '';
+  static var apiSecret = '';
   static var serviceSid =
-      'IS8522285db9e3482986f846d12dc31381'; // Conversation Service SID
-  static var identity = 'DevChat';
-  static var participantIdentity = 'DevUserTwo';
-  static var pushSid = 'CRb0b18e1d600411634fd4b51e13d8e008';
+      ''; // Conversation Service SID
+  static var identity = '';
+  static var participantIdentity = '';
+  static var pushSid = '';
   String? accessToken = "";
 
   final _twilioConversationSdkPlugin = TwilioConversationSdk();

@@ -5,6 +5,7 @@ class Methods {
     /// The method channel name used to interact with the native platform.
     static let generateToken: String = "generateToken"
     static let registerFCMToken: String = "registerFCMToken"
+    static let unregisterFCMToken: String = "unregisterFCMToken"
     static let createConversation: String = "createConversation"
     static let getConversations: String = "getConversations"
     static let getMessages: String = "getMessages"

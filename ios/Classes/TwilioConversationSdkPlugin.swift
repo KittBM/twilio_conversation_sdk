@@ -73,6 +73,11 @@ public class TwilioConversationSdkPlugin: NSObject, FlutterPlugin,FlutterStreamH
                 result("Token Registerd")
             }
             break
+        case Methods.unregisterFCMToken:
+            conversationsHandler.unregisterFCMToken(token: arguments?["fcmToken"] as! String) { success in
+                result("Token unregisterFCMToken")
+            }
+            break
         case Methods.updateAccessToken:
             self.conversationsHandler.updateAccessToken(accessToken: arguments?["accessToken"] as! String) { tchResult in
                 print("Methods.updateAccessToken->\(String(describing: tchResult))")

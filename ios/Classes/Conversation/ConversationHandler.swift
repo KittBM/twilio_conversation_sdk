@@ -72,6 +72,21 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
              print("Device push token registration was\(result.isSuccessful ? "" : " not") successful")
          })
      }
+    
+    func unregisterFCMToken(token: String,completion: @escaping (_ success : Bool) -> Void){
+        
+         let data = token.hexToData
+//        print(data) // Output: 5 bytes
+      
+        
+        self.client?.deregister(withNotificationToken: data ?? Data(), completion: { result in
+             if result.isSuccessful {
+                 completion(true)
+             }
+             print("Twilio Notification Token deregister: \(result) with token \(token)")
+             print("Device push token deregister \(result.isSuccessful ? "" : " not") successful")
+         })
+     }
    
     
     func conversationsClient(_ client: TwilioConversationsClient, conversation: TCHConversation, synchronizationStatusUpdated status: TCHConversationSynchronizationStatus) {

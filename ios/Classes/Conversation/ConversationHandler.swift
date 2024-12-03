@@ -38,7 +38,7 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
                         return lastRead
                     } else if let lastMessageIndex = conversation.lastMessageIndex {
                         // Extract the value of lastMessageIndex and add 1
-                        return NSNumber(value: lastMessageIndex.intValue + 1)
+                        return NSNumber(value: lastMessageIndex.intValue)
                     } else {
                         return 0
                     }

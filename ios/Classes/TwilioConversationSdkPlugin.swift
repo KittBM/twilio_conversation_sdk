@@ -239,7 +239,7 @@ public class TwilioConversationSdkPlugin: NSObject, FlutterPlugin,FlutterStreamH
             break
         case Methods.unSubscribeToMessageUpdate:
             self.conversationsHandler.getConversationFromId(conversationId: arguments?["conversationId"] as! String) { conversation in
-                self.conversationsHandler.lastReadIndex = conversation?.lastMessageIndex
+//                self.conversationsHandler.lastReadIndex = conversation?.lastMessageIndex
             }
             
             conversationsHandler.messageDelegate = nil

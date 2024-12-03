@@ -44,9 +44,9 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
                     }
                 }()
 
-                conversation.setLastReadMessageIndex(computedIndex) { result, index in
-                    print("setLastReadMessageIndex \(result.description)")
-                }
+//                conversation.setLastReadMessageIndex(computedIndex) { result, index in
+//                    print("setLastReadMessageIndex \(result.description)")
+//                }
 
                 self.messageDelegate?.onMessageUpdate(message: updatedMessage, messageSubscriptionId: self.messageSubscriptionId)
                 

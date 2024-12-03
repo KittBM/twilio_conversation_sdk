@@ -72,7 +72,7 @@ public class TwilioConversationSdkPlugin: NSObject, FlutterPlugin,FlutterStreamH
             conversationsHandler.registerFCMToken(token: arguments?["fcmToken"] as! String) { success in
                 result("Token Registerd")
             }
-            break 
+            break
         case Methods.updateAccessToken:
             self.conversationsHandler.updateAccessToken(accessToken: arguments?["accessToken"] as! String) { tchResult in
                 print("Methods.updateAccessToken->\(String(describing: tchResult))")
@@ -234,14 +234,19 @@ public class TwilioConversationSdkPlugin: NSObject, FlutterPlugin,FlutterStreamH
                         self.conversationsHandler.lastReadIndex = nil
                     })
                 }
+                self.conversationsHandler.isSubscribe = true
             }
             
             break
         case Methods.unSubscribeToMessageUpdate:
             self.conversationsHandler.getConversationFromId(conversationId: arguments?["conversationId"] as! String) { conversation in
 //                self.conversationsHandler.lastReadIndex = conversation?.lastMessageIndex
+//                conversation?.setLastReadMessageIndex(conversation?.lastMessageIndex ?? 0, completion: { result, index in
+//                    print("setLastReadMessageIndex \(result.description)")
+//                    self.conversationsHandler.lastReadIndex = nil
+//                })
             }
-            
+            conversationsHandler.isSubscribe = nil
             conversationsHandler.messageDelegate = nil
 
             break

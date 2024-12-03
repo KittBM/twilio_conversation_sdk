@@ -12,7 +12,7 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
     var lastReadIndex: NSNumber?
     weak var messageDelegate: MessageDelegate?
     weak var clientDelegate: ClientDelegate?
-//    weak var tokenDelegate:TokenDelegate?
+     var isSubscribe:Bool?
     public var messageSubscriptionId: String = ""
     var tokenEventSink: FlutterEventSink?
 
@@ -34,19 +34,20 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
                 updatedMessage["message"] = messageDict
                 //MARK: Update Index
                 let computedIndex: NSNumber = {
-                    if let lastRead = lastReadIndex {
-                        return lastRead
-                    } else if let lastMessageIndex = conversation.lastMessageIndex {
+                    if let lastMessageIndex = conversation.lastMessageIndex {
                         // Extract the value of lastMessageIndex and add 1
-                        return NSNumber(value: lastMessageIndex.intValue)
+                        return NSNumber(value: lastMessageIndex.intValue + 1)
                     } else {
-                        return 0
+                        return 1
                     }
                 }()
-
-//                conversation.setLastReadMessageIndex(computedIndex) { result, index in
-//                    print("setLastReadMessageIndex \(result.description)")
-//                }
+                
+                if isSubscribe ?? false {
+                    conversation.setLastReadMessageIndex(computedIndex) { result, index in
+                        print("setLastReadMessageIndex \(result.description)")
+                    }
+                }
+               
 
                 self.messageDelegate?.onMessageUpdate(message: updatedMessage, messageSubscriptionId: self.messageSubscriptionId)
                 

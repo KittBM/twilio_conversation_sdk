@@ -186,6 +186,7 @@ public class TwilioConversationSdkPlugin: NSObject, FlutterPlugin,FlutterStreamH
             }
         case Methods.getMessages:
             self.conversationsHandler.getConversationFromId(conversationId: arguments?["conversationId"] as! String) { conversation in
+                self.conversationsHandler.conversationId = arguments?["conversationId"] as? String
                 if let conversationFromId = conversation {
                     self.conversationsHandler.loadPreviousMessages(conversationFromId,arguments?["messageCount"] as? UInt) { listOfMessages in
                         //                      print("listOfMessagess->\(String(describing: listOfMessages))")
@@ -246,6 +247,7 @@ public class TwilioConversationSdkPlugin: NSObject, FlutterPlugin,FlutterStreamH
 //                    self.conversationsHandler.lastReadIndex = nil
 //                })
             }
+            self.conversationsHandler.conversationId = nil
             conversationsHandler.isSubscribe = nil
             conversationsHandler.messageDelegate = nil
 

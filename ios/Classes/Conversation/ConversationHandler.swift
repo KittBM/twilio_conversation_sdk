@@ -13,6 +13,7 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
     weak var messageDelegate: MessageDelegate?
     weak var clientDelegate: ClientDelegate?
      var isSubscribe:Bool?
+    var conversationId : String?
     public var messageSubscriptionId: String = ""
     var tokenEventSink: FlutterEventSink?
 
@@ -42,7 +43,7 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
                     }
                 }()
                 
-                if isSubscribe ?? false {
+                if (isSubscribe ?? false && conversationId == conversation.sid ){
                     conversation.setLastReadMessageIndex(computedIndex) { result, index in
                         print("setLastReadMessageIndex \(result.description)")
                     }

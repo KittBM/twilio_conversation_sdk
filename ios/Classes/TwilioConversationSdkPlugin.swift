@@ -153,6 +153,18 @@ public class TwilioConversationSdkPlugin: NSObject, FlutterPlugin,FlutterStreamH
                         participant["dateCreated"] = user.dateCreated
                         participant["conversationCreatedBy"] = user.conversation?.createdBy
                         participant["isAdmin"] = (user.conversation?.createdBy == user.identity)
+                        do {
+                            let jsonData = try JSONSerialization.data(withJSONObject: user.attributes()!.dictionary ?? Dictionary(), options: .prettyPrinted)
+                            if let jsonString = String(data: jsonData, encoding: .utf8) {
+                                print(jsonString)
+                                participant["attributes"] = jsonString
+
+                            }
+                        } catch {
+                            print("Error converting dictionary to string: \(error.localizedDescription)")
+                            participant["attributes"] = ""
+
+                        }
                         listOfParticipants.append(participant)
                     }
                 }

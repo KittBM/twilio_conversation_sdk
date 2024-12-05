@@ -1,3 +1,18 @@
+## 0.2.4
+Get attribute on participant list android
+
+## 0.2.3
+iOS Unregister Token
+
+## 0.2.2
+iOS Minor Bug Fixes
+
+## 0.2.1
+iOS Minor Bug Fixes
+
+## 0.2.0
+iOS Minor Bug Fixes
+
 ## 0.1.9
 iOS Minor Bug Fixes
 

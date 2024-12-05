@@ -943,6 +943,7 @@ public class ConversationHandler {
                     participantMap.put("conversationCreatedBy", participantList.get(i).getConversation().getCreatedBy());
                     participantMap.put("dateCreated", participantList.get(i).getConversation().getDateCreated());
                     participantMap.put("isAdmin", Objects.equals(participantList.get(i).getConversation().getCreatedBy(), participantList.get(i).getIdentity()));
+                    participantMap.put("attributes", participantList.get(i).getAttributes().toString());
                     participants.add(participantMap);
                     //System.out.println("participantMap->" + participantMap);
                 }

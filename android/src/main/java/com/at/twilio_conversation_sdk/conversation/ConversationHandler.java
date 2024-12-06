@@ -331,6 +331,9 @@ public class ConversationHandler {
                 } catch (Exception e) {
                     // Handle exceptions (e.g., JSONException, FileNotFoundException)
                     System.err.println("Error preparing message: " + e.getMessage());
+                    HashMap<String, Object> progressData = new HashMap<>();
+                    progressData.put("messageStatus", "Failed");
+                    triggerEvent(progressData);
                     //result.error("PrepareMessageError", e.getMessage(), null);
                 }
             }
@@ -340,6 +343,9 @@ public class ConversationHandler {
                 // Handle error in fetching conversation
                 System.err.println("Error fetching conversation: " + errorInfo.getMessage());
                 //result.error("ConversationFetchError", errorInfo.getMessage(), null);
+                HashMap<String, Object> progressData = new HashMap<>();
+                progressData.put("messageStatus", "Failed");
+                triggerEvent(progressData);
             }
         });
     }
@@ -456,6 +462,9 @@ public class ConversationHandler {
 
                         } catch (Exception e) {
                             System.err.println("Exception: " + e.getMessage());
+                            HashMap<String, Object> progressData = new HashMap<>();
+                            progressData.put("messageStatus", "Failed");
+                            triggerEvent(progressData);
                         }
                     }
 
@@ -485,10 +494,13 @@ public class ConversationHandler {
 
                     @Override
                     public void onTypingStarted(Conversation conversation, Participant participant) {
+                        System.out.println("onTypingStarted->" + participant.getIdentity());
                     }
 
                     @Override
                     public void onTypingEnded(Conversation conversation, Participant participant) {
+                        System.out.println("onTypingEnded->" + participant.getIdentity());
+
                     }
 
                     @Override
@@ -497,7 +509,6 @@ public class ConversationHandler {
                         if (messageInterface != null) {
                             Map<String, Object> syncMap = new HashMap<>();
                             syncMap.put("status", conversation.getSynchronizationStatus().getValue());
-
                             messageInterface.onSynchronizationChanged(syncMap);
                         }
                     }
@@ -507,7 +518,6 @@ public class ConversationHandler {
             @Override
             public void onError(ErrorInfo errorInfo) {
                 //System.out.println("client12-" + errorInfo.getStatus()+"-"+errorInfo.getCode()+"-"+errorInfo.getMessage()+"-"+errorInfo.getDescription()+"-"+errorInfo.getReason());
-
                 CallbackListener.super.onError(errorInfo);
             }
         });
@@ -605,7 +615,7 @@ public class ConversationHandler {
                     @Override
                     public void onError(ErrorInfo errorInfo) {
                         System.out.println("Error fetching last message: " + errorInfo.getMessage());
-                        result.error("ERROR", "Failed to fetch last message: " + errorInfo.getMessage(), null);
+                        //result.error("ERROR", "Failed to fetch last message: " + errorInfo.getMessage(), null);
                     }
                 });
             }
@@ -613,7 +623,7 @@ public class ConversationHandler {
             @Override
             public void onError(ErrorInfo errorInfo) {
                 System.out.println("Error fetching conversation: " + errorInfo.getMessage());
-                result.error("ERROR", "Failed to fetch conversation: " + errorInfo.getMessage(), null);
+                //result.error("ERROR", "Failed to fetch conversation: " + errorInfo.getMessage(), null);
             }
         });
         System.out.println("getLastMessages----->" + list);
@@ -642,7 +652,11 @@ public class ConversationHandler {
             @Override
             public void onError(ErrorInfo errorInfo) {
                 System.out.println("Error fetching conversation: " + errorInfo.getMessage());
-                result.error("ERROR", "Failed to fetch conversation: " + errorInfo.getMessage(), null);
+                List<Map<String, Object>> list = new ArrayList<>();
+                Map<String, Object> messagesMap = new HashMap<>();
+                messagesMap.put("status", "Failed");
+                list.add(messagesMap);
+                result.success(list);
             }
         });
         System.out.println("getUnReadMsgCount----->" + list);
@@ -792,7 +806,12 @@ public class ConversationHandler {
 
                     @Override
                     public void onError(ErrorInfo errorInfo) {
-                        System.err.println("Error retrieving messages: " + errorInfo.getMessage());
+                        System.err.println("Error retrieving get messages: " + errorInfo.getMessage());
+                        List<Map<String, Object>> list = new ArrayList<>();
+                        Map<String, Object> messagesMap = new HashMap<>();
+                        messagesMap.put("status", "Failed");
+                        list.add(messagesMap);
+                        result.success(list);
                         //result.error("MESSAGE_RETRIEVAL_ERROR", errorInfo.getMessage(), null);
                     }
                 });
@@ -801,6 +820,11 @@ public class ConversationHandler {
             @Override
             public void onError(ErrorInfo errorInfo) {
                 System.err.println("Error retrieving conversation: " + errorInfo.getMessage());
+                List<Map<String, Object>> list = new ArrayList<>();
+                Map<String, Object> messagesMap = new HashMap<>();
+                messagesMap.put("status", "Failed");
+                list.add(messagesMap);
+                result.success(list);
                 //result.error("CONVERSATION_RETRIEVAL_ERROR", errorInfo.getMessage(), null);
             }
         });
@@ -896,7 +920,7 @@ public class ConversationHandler {
 
                     @Override
                     public void onConnectionStateChange(ConversationsClient.ConnectionState state) {
-
+                        System.out.println("ConnectionState:" + state.getValue());
                     }
 
                     @Override

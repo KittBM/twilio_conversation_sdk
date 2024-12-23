@@ -90,8 +90,8 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
    
     
     func conversationsClient(_ client: TwilioConversationsClient, conversation: TCHConversation, synchronizationStatusUpdated status: TCHConversationSynchronizationStatus) {
-//        self.messageDelegate?.onSynchronizationChanged(status: ["status" : conversation.synchronizationStatus.rawValue])
-//        print("StatusConversations \(conversation.synchronizationStatus.rawValue) ")
+        self.messageDelegate?.onSynchronizationChanged(status: ["status" : conversation.synchronizationStatus.rawValue])
+        print("StatusConversations \(conversation.synchronizationStatus.rawValue) ")
         
     }
     

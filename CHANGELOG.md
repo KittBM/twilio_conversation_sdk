@@ -1,3 +1,12 @@
+## 0.2.7
+Minor Fixes in iOS
+
+## 0.2.6
+Error Handling in Android
+
+## 0.2.5
+Get attribute on participant list iOS
+
 ## 0.2.4
 Get attribute on participant list android
 

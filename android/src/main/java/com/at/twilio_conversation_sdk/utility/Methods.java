@@ -21,4 +21,6 @@ public class Methods {
     public final static String updateAccessToken = "updateAccessToken";
     public final static String getLastMessages = "getLastMessages";
     public final static String getUnReadMsgCount = "getUnReadMsgCount";
+    public final static String deleteConversation = "deleteConversation";
+    public final static String deleteMessage = "deleteMessage";
 }

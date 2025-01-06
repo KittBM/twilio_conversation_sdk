@@ -57,7 +57,8 @@ class TwilioConversationSdk {
   /// - [accessToken]: The access token used for authentication.
   ///
   /// Returns a [String] indicating the result of the initialization, or `null` if it fails.
-  Future<String?> initializeConversationClient({required String accessToken}) async {
+  Future<String?> initializeConversationClient(
+      {required String accessToken}) async {
     _clientEventChannel
         .receiveBroadcastStream(accessToken)
         .listen((dynamic clientStatus) {
@@ -78,7 +79,8 @@ class TwilioConversationSdk {
   ///
   /// Returns a [String] indicating the result of the operation, or `null` if it fails.
   Future<String?> registerFCMToken({required String fcmToken}) {
-    return TwilioConversationSdkPlatform.instance.registerFCMToken(fcmToken: fcmToken);
+    return TwilioConversationSdkPlatform.instance
+        .registerFCMToken(fcmToken: fcmToken);
   }
 
   /// UnRegister FCM Token
@@ -103,8 +105,8 @@ class TwilioConversationSdk {
   /// Returns a [String] indicating the result of the operation, or `null` if it fails.
   Future<String?> createConversation(
       {required String conversationName, required String identity}) {
-    return TwilioConversationSdkPlatform.instance
-        .createConversation(conversationName: conversationName, identity: identity);
+    return TwilioConversationSdkPlatform.instance.createConversation(
+        conversationName: conversationName, identity: identity);
   }
 
   /// Retrieves a list of conversations.
@@ -145,9 +147,10 @@ class TwilioConversationSdk {
   /// - [messageCount]: The maximum number of messages to retrieve (optional).
   ///
   /// Returns a list of messages as [List], or `null` if the operation fails.
-  Future<List?> getMessages({required String conversationId, int? messageCount}) {
-    return TwilioConversationSdkPlatform.instance
-        .getMessages(conversationId: conversationId, messageCount: messageCount);
+  Future<List?> getMessages(
+      {required String conversationId, int? messageCount}) {
+    return TwilioConversationSdkPlatform.instance.getMessages(
+        conversationId: conversationId, messageCount: messageCount);
   }
 
   /// Joins a conversation.
@@ -204,16 +207,18 @@ class TwilioConversationSdk {
   ///
   /// - [participantName]: The name of the participant to be added.
   /// - [conversationId]: The ID of the conversation in which to add the participant.
-  Future<String?> addParticipant({required participantName, required conversationId}) {
-    return TwilioConversationSdkPlatform.instance
-        .addParticipant(conversationId: conversationId, participantName: participantName);
+  Future<String?> addParticipant(
+      {required participantName, required conversationId}) {
+    return TwilioConversationSdkPlatform.instance.addParticipant(
+        conversationId: conversationId, participantName: participantName);
   }
 
   /// Removes a participant from a conversation.
   ///
   /// - [participantName]: The name of the participant to be removed.
   /// - [conversationId]: The ID of the conversation from which to remove the participant.
-  Future<String?> removeParticipant({required participantName, required conversationId}) {
+  Future<String?> removeParticipant(
+      {required participantName, required conversationId}) {
     return TwilioConversationSdkPlatform.instance.removeParticipant(
         conversationId: conversationId, participantName: participantName);
   }
@@ -236,6 +241,27 @@ class TwilioConversationSdk {
   Future<List?> getParticipants({required String conversationId}) {
     return TwilioConversationSdkPlatform.instance
         .getParticipants(conversationId: conversationId);
+  }
+
+  /// Delete conversation.
+  ///
+  /// This method delete conversation with the specified name and identity.
+  ///
+  /// Returns a [String] indicating the result of the operation, or `null` if it fails.
+  Future<String?> deleteConversation({required String conversationId}) {
+    return TwilioConversationSdkPlatform.instance
+        .deleteConversation(conversationId: conversationId);
+  }
+
+  /// Delete conversation.
+  ///
+  /// This method delete conversation with the specified name and identity.
+  ///
+  /// Returns a [String] indicating the result of the operation, or `null` if it fails.
+  Future<String?> deleteMessage(
+      {required String conversationId, required int index}) {
+    return TwilioConversationSdkPlatform.instance
+        .deleteMessage(conversationId: conversationId, index: index);
   }
 
   /// Subscribes to message update events for a specific conversation.

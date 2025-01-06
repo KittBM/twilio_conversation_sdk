@@ -11,22 +11,23 @@ class MethodChannelTwilioConversationSdk extends TwilioConversationSdkPlatform {
 
   @override
   Future<String?> getPlatformVersion() async {
-    final version = await methodChannel.invokeMethod<String>(
-        'getPlatformVersion');
+    final version =
+        await methodChannel.invokeMethod<String>('getPlatformVersion');
     return version;
   }
 
   /// Generate token and authenticate user (only for Android) #
   @TargetPlatform.android
   @override
-  Future<String?> generateToken({required String accountSid,
-    required String apiKey,
-    required String apiSecret,
-    required String identity,
-    required String serviceSid,
-    required String pushSid}) async {
-    final accessToken = await methodChannel.invokeMethod<String>(
-        'generateToken', {
+  Future<String?> generateToken(
+      {required String accountSid,
+      required String apiKey,
+      required String apiSecret,
+      required String identity,
+      required String serviceSid,
+      required String pushSid}) async {
+    final accessToken =
+        await methodChannel.invokeMethod<String>('generateToken', {
       "accountSid": accountSid,
       "apiKey": apiKey,
       "apiSecret": apiSecret,
@@ -66,26 +67,24 @@ class MethodChannelTwilioConversationSdk extends TwilioConversationSdkPlatform {
   /// Get list of conversations for logged in user #
   @override
   Future<List?> getConversations() async {
-    final List? conversationsList = await methodChannel.invokeMethod(
-        'getConversations');
+    final List? conversationsList =
+        await methodChannel.invokeMethod('getConversations');
     return conversationsList ?? [];
   }
 
   /// Get list of conversations for logged in user last message#
   @override
   Future<List?> getLastMessages({required String conversationId}) async {
-    final List? lastMessageList = await methodChannel.invokeMethod(
-        'getLastMessages',
-        {"conversationId": conversationId});
+    final List? lastMessageList = await methodChannel
+        .invokeMethod('getLastMessages', {"conversationId": conversationId});
     return lastMessageList ?? [];
   }
 
   /// Get list of conversations for logged in user last message unread count#
   @override
   Future<List?> getUnReadMsgCount({required String conversationId}) async {
-    final List? lastMessageList = await methodChannel.invokeMethod(
-        'getUnReadMsgCount',
-        {"conversationId": conversationId});
+    final List? lastMessageList = await methodChannel
+        .invokeMethod('getUnReadMsgCount', {"conversationId": conversationId});
     return lastMessageList ?? [];
   }
 
@@ -93,8 +92,7 @@ class MethodChannelTwilioConversationSdk extends TwilioConversationSdkPlatform {
   @override
   Future<List?> getMessages(
       {required String conversationId, int? messageCount}) async {
-    final List? messages = await methodChannel.invokeMethod(
-        'getMessages',
+    final List? messages = await methodChannel.invokeMethod('getMessages',
         {"conversationId": conversationId, "messageCount": messageCount});
     //print("messages->$messages");
     return messages ?? [];
@@ -103,48 +101,46 @@ class MethodChannelTwilioConversationSdk extends TwilioConversationSdkPlatform {
   /// Join the existing conversation #
   @override
   Future<String?> joinConversation({required String conversationId}) async {
-    final String? result = await methodChannel
-        .invokeMethod<String>(
+    final String? result = await methodChannel.invokeMethod<String>(
         'joinConversation', {"conversationId": conversationId});
     return result ?? "";
   }
 
   /// Send message #
   @override
-  Future<String?> sendMessage({required String conversationId,
-    required String message,
-    dynamic attribute}) async {
+  Future<String?> sendMessage(
+      {required String conversationId,
+      required String message,
+      dynamic attribute}) async {
     final String? result = await methodChannel.invokeMethod<String>(
-        'sendMessage',
-        {
-          "conversationId": conversationId,
-          "message": message,
-          "attribute": attribute
-        });
+        'sendMessage', {
+      "conversationId": conversationId,
+      "message": message,
+      "attribute": attribute
+    });
     return result ?? "";
   }
 
   /// Send message with media #
   @override
-  Future<String?> sendMessageWithMedia({ required String message,
-    required String conversationId,
-    dynamic attribute,
-    required String mediaFilePath,
-    required String mimeType,
-    required String fileName}) async {
-    final String? result = await methodChannel.invokeMethod<String>(
-        'sendMessageWithMedia',
-        {
-          "message": message,
-          "conversationId": conversationId,
-          "attribute": attribute,
-          "mediaFilePath": mediaFilePath,
-          "mimeType": mimeType,
-          "fileName": fileName,
-        });
+  Future<String?> sendMessageWithMedia(
+      {required String message,
+      required String conversationId,
+      dynamic attribute,
+      required String mediaFilePath,
+      required String mimeType,
+      required String fileName}) async {
+    final String? result =
+        await methodChannel.invokeMethod<String>('sendMessageWithMedia', {
+      "message": message,
+      "conversationId": conversationId,
+      "attribute": attribute,
+      "mediaFilePath": mediaFilePath,
+      "mimeType": mimeType,
+      "fileName": fileName,
+    });
     return result ?? "Something Wrong in SendMediaMessage";
   }
-
 
   /// Add participant in a conversation #
   @override
@@ -159,8 +155,8 @@ class MethodChannelTwilioConversationSdk extends TwilioConversationSdkPlatform {
   /// Get messages from the specific conversation #
   @override
   Future<String?> receiveMessages({required String conversationId}) async {
-    final String? result = await methodChannel.invokeMethod<String>(
-        'receiveMessages', {
+    final String? result =
+        await methodChannel.invokeMethod<String>('receiveMessages', {
       "conversationId": conversationId,
     });
     return result ?? "";
@@ -179,8 +175,7 @@ class MethodChannelTwilioConversationSdk extends TwilioConversationSdkPlatform {
       {required String conversationId}) async {
     // TODO: implement onMessageUpdated
     //
-    final String? result = await methodChannel
-        .invokeMethod(
+    final String? result = await methodChannel.invokeMethod(
         'subscribeToMessageUpdate', {"conversationId": conversationId});
     return result ?? "";
   }
@@ -190,8 +185,7 @@ class MethodChannelTwilioConversationSdk extends TwilioConversationSdkPlatform {
       {required String conversationId}) async {
     // TODO: implement onMessageUpdated
     //
-    final String? result = await methodChannel
-        .invokeMethod(
+    final String? result = await methodChannel.invokeMethod(
         'unSubscribeToMessageUpdate', {"conversationId": conversationId});
     return result ?? "";
   }
@@ -200,8 +194,7 @@ class MethodChannelTwilioConversationSdk extends TwilioConversationSdkPlatform {
   Future<String?> initializeConversationClient(
       {required String accessToken}) async {
     // TODO: implement initializeConversationClient
-    final String? result = await methodChannel
-        .invokeMethod(
+    final String? result = await methodChannel.invokeMethod(
         'initializeConversationClient', {"accessToken": accessToken});
     return result ?? "";
   }
@@ -221,5 +214,23 @@ class MethodChannelTwilioConversationSdk extends TwilioConversationSdkPlatform {
         'removeParticipant',
         {"conversationId": conversationId, "participantName": participantName});
     return result ?? "";
+  }
+
+  /// delete conversation #
+  @override
+  Future<String?> deleteConversation({required String conversationId}) async {
+    final result = await methodChannel.invokeMethod<String>(
+        'deleteConversation', {"conversationId": conversationId});
+    return result;
+  }
+
+  /// delete message #
+  @override
+  Future<String?> deleteMessage(
+      {required String conversationId, required int index}) async {
+    final result = await methodChannel.invokeMethod<String>(
+        'deleteMessage',
+        {"conversationId": conversationId, "index": index});
+    return result;
   }
 }

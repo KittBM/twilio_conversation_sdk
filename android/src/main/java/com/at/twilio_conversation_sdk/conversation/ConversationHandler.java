@@ -2,6 +2,9 @@ package com.at.twilio_conversation_sdk.conversation;
 
 import static org.apache.commons.io.FileUtils.openInputStream;
 
+import android.os.Handler;
+import android.os.Looper;
+
 import androidx.annotation.NonNull;
 
 import com.at.twilio_conversation_sdk.app_interface.AccessTokenInterface;
@@ -17,6 +20,7 @@ import com.twilio.conversations.ConversationsClientListener;
 import com.twilio.conversations.Media;
 import com.twilio.conversations.MediaUploadListener;
 import com.twilio.conversations.Message;
+import com.twilio.conversations.Messages;
 import com.twilio.conversations.Participant;
 import com.twilio.conversations.StatusListener;
 import com.twilio.conversations.User;
@@ -301,7 +305,7 @@ public class ConversationHandler {
                                     // Handle media upload failure
                                     System.err.println("Media upload failed:" + errorInfo.getMessage());
                                     HashMap<String, Object> progressData = new HashMap<>();
-                                    progressData.put("mediaStatus", "Failed");
+                                    progressData.put("mediaStatus", Strings.failed);
                                     triggerEvent(progressData);
                                 }
                             })
@@ -319,7 +323,7 @@ public class ConversationHandler {
                                     System.err.println("Error sending message: " + errorInfo.getMessage());
                                     //result.success("SendMessageError", errorInfo.getMessage(), null);
                                     HashMap<String, Object> progressData = new HashMap<>();
-                                    progressData.put("messageStatus", "Failed");
+                                    progressData.put("messageStatus", Strings.failed);
                                     triggerEvent(progressData);
                                 }
                             });
@@ -332,7 +336,7 @@ public class ConversationHandler {
                     // Handle exceptions (e.g., JSONException, FileNotFoundException)
                     System.err.println("Error preparing message: " + e.getMessage());
                     HashMap<String, Object> progressData = new HashMap<>();
-                    progressData.put("messageStatus", "Failed");
+                    progressData.put("messageStatus", Strings.failed);
                     triggerEvent(progressData);
                     //result.error("PrepareMessageError", e.getMessage(), null);
                 }
@@ -344,7 +348,7 @@ public class ConversationHandler {
                 System.err.println("Error fetching conversation: " + errorInfo.getMessage());
                 //result.error("ConversationFetchError", errorInfo.getMessage(), null);
                 HashMap<String, Object> progressData = new HashMap<>();
-                progressData.put("messageStatus", "Failed");
+                progressData.put("messageStatus", Strings.failed);
                 triggerEvent(progressData);
             }
         });
@@ -463,7 +467,7 @@ public class ConversationHandler {
                         } catch (Exception e) {
                             System.err.println("Exception: " + e.getMessage());
                             HashMap<String, Object> progressData = new HashMap<>();
-                            progressData.put("messageStatus", "Failed");
+                            progressData.put("messageStatus", Strings.failed);
                             triggerEvent(progressData);
                         }
                     }
@@ -476,7 +480,7 @@ public class ConversationHandler {
 
                     @Override
                     public void onMessageDeleted(Message message) {
-                        //System.out.println("onMessageDeleted->"+message.toString());
+                        System.out.println("onMessageDeleted->" + message.getBody());
                     }
 
                     @Override
@@ -615,7 +619,11 @@ public class ConversationHandler {
                     @Override
                     public void onError(ErrorInfo errorInfo) {
                         System.out.println("Error fetching last message: " + errorInfo.getMessage());
-                        //result.error("ERROR", "Failed to fetch last message: " + errorInfo.getMessage(), null);
+                        List<Map<String, Object>> list = new ArrayList<>();
+                        Map<String, Object> messagesMap = new HashMap<>();
+                        messagesMap.put("status", Strings.failed);
+                        list.add(messagesMap);
+                        result.success(list);
                     }
                 });
             }
@@ -623,7 +631,6 @@ public class ConversationHandler {
             @Override
             public void onError(ErrorInfo errorInfo) {
                 System.out.println("Error fetching conversation: " + errorInfo.getMessage());
-                //result.error("ERROR", "Failed to fetch conversation: " + errorInfo.getMessage(), null);
             }
         });
         System.out.println("getLastMessages----->" + list);
@@ -654,7 +661,7 @@ public class ConversationHandler {
                 System.out.println("Error fetching conversation: " + errorInfo.getMessage());
                 List<Map<String, Object>> list = new ArrayList<>();
                 Map<String, Object> messagesMap = new HashMap<>();
-                messagesMap.put("status", "Failed");
+                messagesMap.put("status", Strings.failed);
                 list.add(messagesMap);
                 result.success(list);
             }
@@ -809,7 +816,7 @@ public class ConversationHandler {
                         System.err.println("Error retrieving get messages: " + errorInfo.getMessage());
                         List<Map<String, Object>> list = new ArrayList<>();
                         Map<String, Object> messagesMap = new HashMap<>();
-                        messagesMap.put("status", "Failed");
+                        messagesMap.put("status", Strings.failed);
                         list.add(messagesMap);
                         result.success(list);
                         //result.error("MESSAGE_RETRIEVAL_ERROR", errorInfo.getMessage(), null);
@@ -822,10 +829,83 @@ public class ConversationHandler {
                 System.err.println("Error retrieving conversation: " + errorInfo.getMessage());
                 List<Map<String, Object>> list = new ArrayList<>();
                 Map<String, Object> messagesMap = new HashMap<>();
-                messagesMap.put("status", "Failed");
+                messagesMap.put("status", Strings.failed);
                 list.add(messagesMap);
                 result.success(list);
                 //result.error("CONVERSATION_RETRIEVAL_ERROR", errorInfo.getMessage(), null);
+            }
+        });
+    }
+
+    public static void deleteConversation(String conversationId, MethodChannel.Result result) {
+        conversationClient.getConversation(conversationId, new CallbackListener<Conversation>() {
+            @Override
+            public void onSuccess(Conversation conversation) {
+                conversation.destroy(new StatusListener() {
+                    @Override
+                    public void onSuccess() {
+                        System.err.println("Conversation Delete Success");
+                        result.success(Strings.success);
+                    }
+
+                    @Override
+                    public void onError(ErrorInfo errorInfo) {
+                        System.err.println("Conversation Delete Failed: " + errorInfo.getMessage());
+                        result.success(Strings.failed);
+                    }
+                });
+            }
+
+            @Override
+            public void onError(ErrorInfo errorInfo) {
+                System.err.println("Conversation Delete Failed");
+                result.success(Strings.failed);
+            }
+        });
+    }
+
+
+    public static void deleteMessage(String conversationId, int index, MethodChannel.Result result) {
+        System.err.println("Index - " + index);
+        conversationClient.getConversation(conversationId, new CallbackListener<Conversation>() {
+            @Override
+            public void onSuccess(Conversation conversation) {
+                System.err.println("Conversation retrieved successfully.");
+
+                conversation.getMessageByIndex(index, new CallbackListener<Message>() {
+                    @Override
+                    public void onSuccess(Message message) {
+                        System.err.println("Message retrieved successfully. Message: " + message + " Body: " + message.getBody());
+
+                        //new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                            conversation.removeMessage(message, new StatusListener() {
+                                @Override
+                                public void onSuccess() {
+                                    System.err.println("Message deleted successfully.");
+                                    result.success(Strings.success);
+                                }
+
+                                @Override
+                                public void onError(ErrorInfo errorInfo) {
+                                    System.err.println("Failed to delete message. Error: " + errorInfo.getMessage());
+                                    result.success(Strings.failed);
+                                }
+                            });
+                        //}, 2000); // Delay of 2 seconds (2000 milliseconds)
+                    }
+
+                    @Override
+                    public void onError(ErrorInfo errorInfo) {
+                        System.err.println("Failed to retrieve message by index. Error: " + errorInfo.getMessage());
+                        result.success(Strings.failed);
+                    }
+                });
+            }
+
+            @Override
+            public void onError(ErrorInfo errorInfo) {
+                System.err.println("Failed to retrieve conversation. Error: " + errorInfo.getMessage());
+                result.success(Strings.failed);
             }
         });
     }

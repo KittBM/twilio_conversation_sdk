@@ -150,76 +150,122 @@ class _ConversationListState extends State<ConversationList> {
                       }
                     }
 
-                    return Card(
-                        child: SizedBox(
-                      child: Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: const BoxDecoration(
-                                    color: Colors.black,
-                                    shape: BoxShape.circle),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  conversationName.substring(0, 1),
-                                  style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 25),
-                                )),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(conversationName),
-                                  lastMessage != null
-                                      ? Text(
-                                          lastMessage,
-                                          style: const TextStyle(
-                                              color: Colors.blue,
-                                              fontWeight: FontWeight.normal),
-                                        )
-                                      : const SizedBox(),
-                                ],
-                              ),
+                    return InkWell(
+                      onTap: () async {
+                        await deleteConversation(
+                            conversationList.elementAt(index)['sid'], index);
+                      },
+                      child: Card(
+                        child: Dismissible(
+                          key: Key(conversationList.elementAt(index)['sid']),
+                          direction: DismissDirection.endToStart,
+                          onDismissed: (direction) async {
+                            await deleteConversation(
+                                conversationList.elementAt(index)['sid'], index);
+                          },
+                          background: Container(
+                            color: Colors.red,
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: const Icon(
+                              Icons.delete,
+                              color: Colors.white,
                             ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
+                          ),
+                          child: SizedBox(
+                          child: Padding(
+                            padding: const EdgeInsets.all(10.0),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                Text(
-                                  formattedTime,
-                                  style: TextStyle(
-                                      color: unreadIndex != 0
-                                          ? Colors.green
-                                          : Colors.grey,
-                                      fontWeight: FontWeight.normal),
+                                Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: const BoxDecoration(
+                                        color: Colors.black,
+                                        shape: BoxShape.circle),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      conversationName.substring(0, 1),
+                                      style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 25),
+                                    )),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(conversationName),
+                                      lastMessage != null
+                                          ? Text(
+                                              lastMessage,
+                                              style: const TextStyle(
+                                                  color: Colors.blue,
+                                                  fontWeight: FontWeight.normal),
+                                            )
+                                          : const SizedBox(),
+                                    ],
+                                  ),
                                 ),
-                                unreadIndex != 0
-                                    ? Container(
-                                        padding: const EdgeInsets.all(10),
-                                        decoration: const BoxDecoration(
-                                            color: Colors.black,
-                                            shape: BoxShape.circle),
-                                        child: Text(
-                                          unreadIndex.toString(),
-                                          style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold),
-                                        ))
-                                    : Container()
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      formattedTime,
+                                      style: TextStyle(
+                                          color: unreadIndex != 0
+                                              ? Colors.green
+                                              : Colors.grey,
+                                          fontWeight: FontWeight.normal),
+                                    ),
+                                    unreadIndex != 0
+                                        ? Container(
+                                            padding: const EdgeInsets.all(10),
+                                            decoration: const BoxDecoration(
+                                                color: Colors.black,
+                                                shape: BoxShape.circle),
+                                            child: Text(
+                                              unreadIndex.toString(),
+                                              style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold),
+                                            ))
+                                        : Container()
+                                  ],
+                                )
                               ],
-                            )
-                          ],
+                            ),
+                          ),
+                        ),
                         ),
                       ),
-                    ));
+                    );
                   },
                 ),
               ),
       ),
     );
+  }
+
+  deleteConversation(String sid, int index) async {
+    setState(() {
+      isLoading = true;
+    });
+    await widget.twilioConversationSdkPlugin
+        .deleteConversation(conversationId: sid)
+        .then((result) {
+      print(result);
+      if (result == "Success") {
+        conversationList.removeAt(index);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Deleted'),
+          ),
+        );
+      }
+    });
+    setState(() {
+      isLoading = false;
+    });
   }
 }

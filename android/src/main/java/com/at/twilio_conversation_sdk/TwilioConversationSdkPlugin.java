@@ -147,6 +147,12 @@ public class TwilioConversationSdkPlugin implements FlutterPlugin, MethodCallHan
             case Methods.updateAccessToken:
                 ConversationHandler.updateAccessToken(call.argument("accessToken"), result);
                 break;
+            case Methods.deleteConversation:
+                ConversationHandler.deleteConversation(call.argument("conversationId"), result);
+                break;
+            case Methods.deleteMessage:
+                ConversationHandler.deleteMessage(call.argument("conversationId"), call.argument("index"), result);
+                break;
             default:
                 break;
         }

@@ -11,7 +11,8 @@ import 'package:twilio_conversation_sdk_example/conversation_list.dart';
 
 DateFormat get formatterYYYYMMddTHHMMss => DateFormat('yyyy-MM-ddTHH:mm:ss');
 
-DateFormat get formatterYYYYMMddTHHMMssSSS => DateFormat('yyyy-MM-ddTHH:mm:ss.SSS');
+DateFormat get formatterYYYYMMddTHHMMssSSS =>
+    DateFormat('yyyy-MM-ddTHH:mm:ss.SSS');
 
 void main() {
   runApp(const MyApp());
@@ -37,13 +38,14 @@ class Conversation extends StatefulWidget {
 }
 
 class _ConversationState extends State<Conversation> {
-  static var accountSid = '';
-  static var apiKey = '';
-  static var apiSecret = '';
-  static var serviceSid = ''; // Conversation Service SID
+  static var accountSid = 'ACe78f25b098b2a7e1bd7a62e1faa62eb1';
+  static var apiKey = 'SKd8e02fa8a99bd970be61ec7d5fae1d6b';
+  static var apiSecret = 'dwJUkXo0mysOXKKAPhG0UduNWf4MKVX8';
+  static var serviceSid =
+      'IS8522285db9e3482986f846d12dc31381'; // Conversation Service SID
+  static var pushSid = 'CRb0b18e1d600411634fd4b51e13d8e008';
   static var identity = 'DevChat';
   static var participantIdentity = 'DevUserTwo';
-  static var pushSid = '';
   String? accessToken = "";
 
   final _twilioConversationSdkPlugin = TwilioConversationSdk();
@@ -70,8 +72,8 @@ class _ConversationState extends State<Conversation> {
     });
   }
 
-  void getAccessToken(String accountSid, String apiKey, String apiSecret, String identity,
-      String serviceSid, String pushSid) async {
+  void getAccessToken(String accountSid, String apiKey, String apiSecret,
+      String identity, String serviceSid, String pushSid) async {
     accessToken = await _twilioConversationSdkPlugin.generateToken(
         accountSid: accountSid,
         apiKey: apiKey,
@@ -95,14 +97,15 @@ class _ConversationState extends State<Conversation> {
   }
 
   checkOrCreateConversation() async {
-    List conversationList = await _twilioConversationSdkPlugin.getConversations() ?? [];
+    List conversationList =
+        await _twilioConversationSdkPlugin.getConversations() ?? [];
     print("Conversation List $conversationList");
     if (conversationList.isNotEmpty) {
       bool isParticipantFound = false;
       for (Map conversation in conversationList) {
         print("Conversation $conversation");
-        List participantList = await _twilioConversationSdkPlugin.getParticipants(
-                conversationId: conversation["sid"]) ??
+        List participantList = await _twilioConversationSdkPlugin
+                .getParticipants(conversationId: conversation["sid"]) ??
             [];
         for (Map participant in participantList) {
           print("Participant $participant");
@@ -146,7 +149,8 @@ class _ConversationState extends State<Conversation> {
         _animateToIndex(messages.length);
         setState(() {});
       } else if (event['mediaStatus'] != null) {
-        if (event['mediaStatus'] == "Completed" || event['mediaStatus'] == "Failed") {
+        if (event['mediaStatus'] == "Completed" ||
+            event['mediaStatus'] == "Failed") {
           setState(() {
             _progress = 0;
             totalBytes = 0;
@@ -233,13 +237,14 @@ class _ConversationState extends State<Conversation> {
 
     attribute = {"hasMedia": true};
 
-    final String? sendMessage = await _twilioConversationSdkPlugin.sendMessageWithMedia(
-        message: "",
-        conversationId: conversationId,
-        attribute: attribute,
-        mediaFilePath: selectedDocPath,
-        mimeType: getMimeType(selectedDocPath),
-        fileName: fileName);
+    final String? sendMessage =
+        await _twilioConversationSdkPlugin.sendMessageWithMedia(
+            message: "",
+            conversationId: conversationId,
+            attribute: attribute,
+            mediaFilePath: selectedDocPath,
+            mimeType: getMimeType(selectedDocPath),
+            fileName: fileName);
     print("Result $sendMessage");
     _progress = 0;
     totalBytes = 0;
@@ -250,9 +255,9 @@ class _ConversationState extends State<Conversation> {
   getAllMessages() async {
     print("Get Message for $conversationId");
     messages.clear();
-    var messageList =
-        await _twilioConversationSdkPlugin.getMessages(conversationId: conversationId) ??
-            [];
+    var messageList = await _twilioConversationSdkPlugin.getMessages(
+            conversationId: conversationId) ??
+        [];
     messages.addAll(messageList);
     print("Messages $messages");
     setState(() {});
@@ -263,7 +268,8 @@ class _ConversationState extends State<Conversation> {
   addParticipant() async {
     final String? addSecondParticipantConversation =
         await _twilioConversationSdkPlugin.addParticipant(
-            conversationId: conversationId, participantName: participantIdentity);
+            conversationId: conversationId,
+            participantName: participantIdentity);
     print("Result Second $addSecondParticipantConversation");
     unsubscribe();
     subscribe();
@@ -278,13 +284,15 @@ class _ConversationState extends State<Conversation> {
         leading: participantIdentity.isNotEmpty
             ? Container(
                 padding: const EdgeInsets.all(10),
-                decoration:
-                    const BoxDecoration(color: Colors.black, shape: BoxShape.circle),
+                decoration: const BoxDecoration(
+                    color: Colors.black, shape: BoxShape.circle),
                 alignment: Alignment.center,
                 child: Text(
                   participantIdentity.substring(0, 1),
                   style: const TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold, fontSize: 25),
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 25),
                 ))
             : Container(),
         title: Text(identity.isEmpty
@@ -306,7 +314,8 @@ class _ConversationState extends State<Conversation> {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) {
-                          return ConversationList(identity, _twilioConversationSdkPlugin);
+                          return ConversationList(
+                              identity, _twilioConversationSdkPlugin);
                         },
                       ),
                     ).then((data) {
@@ -332,8 +341,8 @@ class _ConversationState extends State<Conversation> {
                         onChanged: (value) {
                           identity = value;
                         },
-                        decoration:
-                            const InputDecoration(labelText: 'Enter your identity'),
+                        decoration: const InputDecoration(
+                            labelText: 'Enter your identity'),
                       ),
                     )
                   : Container(),
@@ -353,8 +362,8 @@ class _ConversationState extends State<Conversation> {
                   ? ElevatedButton(
                       onPressed: () {
                         if (identity.isNotEmpty) {
-                          getAccessToken(accountSid, apiKey, apiSecret, identity,
-                              serviceSid, pushSid);
+                          getAccessToken(accountSid, apiKey, apiSecret,
+                              identity, serviceSid, pushSid);
                         }
                       },
                       child: Text("Get Access Token"),
@@ -368,7 +377,8 @@ class _ConversationState extends State<Conversation> {
                               visible: isSendMedia,
                               child: LinearProgressIndicator(
                                 value: _progress,
-                                minHeight: 20.0, // Set the height of the progress bar
+                                minHeight:
+                                    20.0, // Set the height of the progress bar
                               ),
                             ),
                             Expanded(
@@ -379,13 +389,28 @@ class _ConversationState extends State<Conversation> {
                                   shrinkWrap: true,
                                   itemCount: messages.length,
                                   itemBuilder: (context, index) {
-                                    List attachMedia = messages[index]['attachMedia'];
-                                    return getMessageView(
-                                        messages[index]["attributes"],
-                                        messages[index]["body"],
-                                        messages[index]["author"],
-                                        messages[index]["dateCreated"],
-                                        attachMedia);
+                                    List attachMedia =
+                                        messages[index]['attachMedia'];
+                                    return /*InkWell(
+                                      onTap: () async {
+                                        await _twilioConversationSdkPlugin
+                                            .deleteMessage(
+                                                conversationId: conversationId,
+                                                index: index)
+                                            .then((result) async {
+                                          if (result == "Success") {
+                                            await getAllMessages();
+                                          }
+                                          print(result);
+                                        });
+                                      },
+                                      child:*/ getMessageView(
+                                          messages[index]["attributes"],
+                                          messages[index]["body"],
+                                          messages[index]["author"],
+                                          messages[index]["dateCreated"],
+                                          attachMedia);
+                                    //);
                                   },
                                 ),
                               ),
@@ -419,7 +444,10 @@ class _ConversationState extends State<Conversation> {
                                       hintText: 'Message',
                                       hintStyle: TextStyle(color: Colors.white),
                                       contentPadding: EdgeInsets.only(
-                                          left: 15, bottom: 11, top: 11, right: 15),
+                                          left: 15,
+                                          bottom: 11,
+                                          top: 11,
+                                          right: 15),
                                     ),
                                   ),
                                 ),
@@ -430,7 +458,8 @@ class _ConversationState extends State<Conversation> {
                                           if (message.text.isNotEmpty) {
                                             sendMessage();
                                           } else {
-                                            showAlert("Please type your message");
+                                            showAlert(
+                                                "Please type your message");
                                           }
                                         },
                                         icon: const Icon(
@@ -447,7 +476,8 @@ class _ConversationState extends State<Conversation> {
                             ? const CircularProgressIndicator()
                             : Container(
                                 decoration: const BoxDecoration(
-                                    color: Colors.black, shape: BoxShape.circle),
+                                    color: Colors.black,
+                                    shape: BoxShape.circle),
                                 alignment: Alignment.center,
                                 child: IconButton(
                                   onPressed: () async {
@@ -497,7 +527,8 @@ class _ConversationState extends State<Conversation> {
         //String? sid = media['sid'];
       }
       return Align(
-        alignment: author == identity ? Alignment.centerRight : Alignment.centerLeft,
+        alignment:
+            author == identity ? Alignment.centerRight : Alignment.centerLeft,
         child: Card(
           margin: const EdgeInsets.all(10),
           color: author == identity ? Colors.blue : Colors.black,
@@ -507,12 +538,15 @@ class _ConversationState extends State<Conversation> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 mediaUrl != null && mediaUrl.isNotEmpty
-                    ? contentType == "application/pdf" || contentType == "video/mp4"
+                    ? contentType == "application/pdf" ||
+                            contentType == "video/mp4"
                         ? Text(
                             textAlign: TextAlign.end,
                             filename ?? "",
                             style: TextStyle(
-                                color: author == identity ? Colors.white : Colors.white,
+                                color: author == identity
+                                    ? Colors.white
+                                    : Colors.white,
                                 fontSize: 16),
                           )
                         : SizedBox(
@@ -520,7 +554,8 @@ class _ConversationState extends State<Conversation> {
                             width: 150,
                             child: CachedNetworkImage(
                                 imageUrl: mediaUrl,
-                                imageBuilder: (context, imageProvider) => Container(
+                                imageBuilder: (context, imageProvider) =>
+                                    Container(
                                       height: 200,
                                       width: 150,
                                       decoration: BoxDecoration(
@@ -542,7 +577,9 @@ class _ConversationState extends State<Conversation> {
                         textAlign: TextAlign.end,
                         message,
                         style: TextStyle(
-                            color: author == identity ? Colors.white : Colors.white,
+                            color: author == identity
+                                ? Colors.white
+                                : Colors.white,
                             fontSize: 10),
                       )
                     : const SizedBox(),
@@ -562,7 +599,8 @@ class _ConversationState extends State<Conversation> {
       Map<String, String> attributeModel = Map.castFrom(json.decode(attribute));
       if (attributeModel['url'] != null) {
         return Align(
-          alignment: author == identity ? Alignment.centerRight : Alignment.centerLeft,
+          alignment:
+              author == identity ? Alignment.centerRight : Alignment.centerLeft,
           child: Card(
             margin: const EdgeInsets.all(10),
             color: author == identity ? Colors.blue : Colors.black,
@@ -579,7 +617,9 @@ class _ConversationState extends State<Conversation> {
                         textAlign: TextAlign.center,
                         attributeModel['url']!,
                         style: TextStyle(
-                            color: author == identity ? Colors.white : Colors.white,
+                            color: author == identity
+                                ? Colors.white
+                                : Colors.white,
                             fontSize: 14),
                       ),
                     ),
@@ -587,7 +627,8 @@ class _ConversationState extends State<Conversation> {
                       textAlign: TextAlign.end,
                       timeAgo,
                       style: TextStyle(
-                          color: author == identity ? Colors.white : Colors.white,
+                          color:
+                              author == identity ? Colors.white : Colors.white,
                           fontSize: 10),
                     ),
                   ],
@@ -598,7 +639,8 @@ class _ConversationState extends State<Conversation> {
         );
       } else {
         return Align(
-          alignment: author == identity ? Alignment.centerRight : Alignment.centerLeft,
+          alignment:
+              author == identity ? Alignment.centerRight : Alignment.centerLeft,
           child: Card(
             margin: const EdgeInsets.all(10),
             child: Padding(
@@ -627,7 +669,8 @@ class _ConversationState extends State<Conversation> {
       }
     } else {
       return Align(
-        alignment: author == identity ? Alignment.centerRight : Alignment.centerLeft,
+        alignment:
+            author == identity ? Alignment.centerRight : Alignment.centerLeft,
         child: Card(
           margin: const EdgeInsets.all(10),
           child: Padding(

@@ -243,6 +243,12 @@ class TwilioConversationSdk {
         .getParticipants(conversationId: conversationId);
   }
 
+  /// Returns a list of participants with name as [List], or `null` if the operation fails.
+  Future<List?> getParticipantsWithName({required String conversationId}) {
+    return TwilioConversationSdkPlatform.instance
+        .getParticipantsWithName(conversationId: conversationId);
+  }
+
   /// Delete conversation.
   ///
   /// This method delete conversation with the specified name and identity.

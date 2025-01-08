@@ -141,6 +141,10 @@ public class TwilioConversationSdkPlugin implements FlutterPlugin, MethodCallHan
             case Methods.getParticipants:
                 ConversationHandler.getParticipants(call.argument("conversationId"), result);
                 break;
+            // Get participants with name from the specific conversation #
+            case Methods.getParticipantsWithName:
+                ConversationHandler.getParticipantsWithName(call.argument("conversationId"), result);
+                break;
             case Methods.unSubscribeToMessageUpdate:
                 ConversationHandler.unSubscribeToMessageUpdate(call.argument("conversationId"));
                 break;

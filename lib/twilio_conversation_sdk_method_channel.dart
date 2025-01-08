@@ -170,6 +170,14 @@ class MethodChannelTwilioConversationSdk extends TwilioConversationSdkPlatform {
     return participantsList ?? [];
   }
 
+  /// Get participants with name from the specific conversation #
+  @override
+  Future<List?> getParticipantsWithName({required String conversationId}) async {
+    final List? participantsList = await methodChannel
+        .invokeMethod('getParticipantsWithName', {"conversationId": conversationId});
+    return participantsList ?? [];
+  }
+
   @override
   Future<String> subscribeToMessageUpdate(
       {required String conversationId}) async {

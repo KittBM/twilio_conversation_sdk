@@ -46,6 +46,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.TimeZone;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.MethodChannel;
@@ -878,19 +879,19 @@ public class ConversationHandler {
                         System.err.println("Message retrieved successfully. Message: " + message + " Body: " + message.getBody());
 
                         //new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                            conversation.removeMessage(message, new StatusListener() {
-                                @Override
-                                public void onSuccess() {
-                                    System.err.println("Message deleted successfully.");
-                                    result.success(Strings.success);
-                                }
+                        conversation.removeMessage(message, new StatusListener() {
+                            @Override
+                            public void onSuccess() {
+                                System.err.println("Message deleted successfully.");
+                                result.success(Strings.success);
+                            }
 
-                                @Override
-                                public void onError(ErrorInfo errorInfo) {
-                                    System.err.println("Failed to delete message. Error: " + errorInfo.getMessage());
-                                    result.success(Strings.failed);
-                                }
-                            });
+                            @Override
+                            public void onError(ErrorInfo errorInfo) {
+                                System.err.println("Failed to delete message. Error: " + errorInfo.getMessage());
+                                result.success(Strings.failed);
+                            }
+                        });
                         //}, 2000); // Delay of 2 seconds (2000 milliseconds)
                     }
 
@@ -1062,6 +1063,63 @@ public class ConversationHandler {
             }
         });
     }
+
+    public static void getParticipantsWithName(String conversationId, MethodChannel.Result result) {
+        conversationClient.getConversation(conversationId, new CallbackListener<Conversation>() {
+            @Override
+            public void onSuccess(Conversation conversation) {
+                List<Participant> participantList = conversation.getParticipantsList();
+                List<Map<String, Object>> participants = new ArrayList<>();
+                AtomicInteger pendingCallbacks = new AtomicInteger(participantList.size());
+
+                if (participantList.isEmpty()) {
+                    result.success(participants);
+                    return;
+                }
+
+                for (Participant participant : participantList) {
+                    Map<String, Object> participantMap = new HashMap<>();
+                    participant.getAndSubscribeUser(new CallbackListener<User>() {
+                        @Override
+                        public void onSuccess(User user) {
+                            participantMap.put("identity", user.getIdentity());
+                            participantMap.put("friendlyName", user.getFriendlyName());
+                            fillParticipantDetails(participant, participantMap);
+                            participants.add(participantMap);
+                            if (pendingCallbacks.decrementAndGet() == 0) {
+                                result.success(participants);
+                            }
+                        }
+
+                        @Override
+                        public void onError(ErrorInfo errorInfo) {
+                            fillParticipantDetails(participant, participantMap);
+                            participants.add(participantMap);
+                            if (pendingCallbacks.decrementAndGet() == 0) {
+                                result.success(participants);
+                            }
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onError(ErrorInfo errorInfo) {
+                result.success(new ArrayList<>());
+            }
+        });
+    }
+
+    private static void fillParticipantDetails(Participant participant, Map<String, Object> participantMap) {
+        participantMap.put("identity", participant.getIdentity());
+        participantMap.put("sid", participant.getSid());
+        participantMap.put("conversationSid", participant.getConversation().getSid());
+        participantMap.put("conversationCreatedBy", participant.getConversation().getCreatedBy());
+        participantMap.put("dateCreated", participant.getConversation().getDateCreated());
+        participantMap.put("isAdmin", Objects.equals(participant.getConversation().getCreatedBy(), participant.getIdentity()));
+        participantMap.put("attributes", participant.getAttributes().toString());
+    }
+
 
     public static void updateAccessToken(String accessToken, MethodChannel.Result result) {
         Map<String, Object> tokenStatus = new HashMap<>();

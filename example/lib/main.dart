@@ -55,9 +55,11 @@ class _ConversationState extends State<Conversation> {
   var conversationId = "";
   var conversationName = "";
   List messages = List.empty(growable: true);
+  List participantList = List.empty(growable: true);
   TextEditingController message = TextEditingController();
   final ScrollController _controller = ScrollController();
   final double _height = 100.0;
+  String authorName = "";
   String selectedDocPath = "";
   String fileName = "";
   bool isSendMedia = false;
@@ -70,6 +72,13 @@ class _ConversationState extends State<Conversation> {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       _animateToIndex(messages.length);
     });
+  }
+
+  getParticipants(String conversationId) async {
+    participantList.clear();
+    participantList = await _twilioConversationSdkPlugin
+            .getParticipantsWithName(conversationId: conversationId) ??
+        [];
   }
 
   void getAccessToken(String accountSid, String apiKey, String apiSecret,
@@ -113,6 +122,7 @@ class _ConversationState extends State<Conversation> {
             isParticipantFound = true;
             conversationId = conversation["sid"];
             conversationName = conversation["conversationName"];
+            getParticipants(conversationId);
             subscribe();
             break;
           }
@@ -404,12 +414,13 @@ class _ConversationState extends State<Conversation> {
                                           print(result);
                                         });
                                       },
-                                      child:*/ getMessageView(
-                                          messages[index]["attributes"],
-                                          messages[index]["body"],
-                                          messages[index]["author"],
-                                          messages[index]["dateCreated"],
-                                          attachMedia);
+                                      child:*/
+                                        getMessageView(
+                                            messages[index]["attributes"],
+                                            messages[index]["body"],
+                                            messages[index]["author"],
+                                            messages[index]["dateCreated"],
+                                            attachMedia);
                                     //);
                                   },
                                 ),
@@ -515,7 +526,14 @@ class _ConversationState extends State<Conversation> {
     DateTime dateTime = formatterYYYYMMddTHHMMssSSS.parse(localDate);
     String timeAgo;
     timeAgo = Jiffy.parseFromDateTime(dateTime).fromNow();
-
+    for (Map participant in participantList) {
+      if (participant["identity"] == author) {
+        authorName = participant["friendlyName"].toString().isEmpty
+            ? participant["identity"]
+            : participant["friendlyName"];
+        break;
+      }
+    }
     if (attribute.contains("hasMedia")) {
       String? mediaUrl;
       String? contentType;
@@ -571,6 +589,13 @@ class _ConversationState extends State<Conversation> {
                                       child: CircularProgressIndicator(),
                                     )),
                           )
+                    : const SizedBox(),
+                authorName.isNotEmpty
+                    ? Text(
+                        textAlign: TextAlign.end,
+                        authorName,
+                        style: const TextStyle(color: Colors.red, fontSize: 10),
+                      )
                     : const SizedBox(),
                 message.isNotEmpty
                     ? Text(
@@ -648,6 +673,14 @@ class _ConversationState extends State<Conversation> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
+                  authorName.isNotEmpty
+                      ? Text(
+                          textAlign: TextAlign.end,
+                          authorName,
+                          style:
+                              const TextStyle(color: Colors.red, fontSize: 10),
+                        )
+                      : const SizedBox(),
                   Text(
                     message,
                     style: TextStyle(
@@ -678,6 +711,13 @@ class _ConversationState extends State<Conversation> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
+                authorName.isNotEmpty
+                    ? Text(
+                        textAlign: TextAlign.end,
+                        authorName,
+                        style: const TextStyle(color: Colors.red, fontSize: 10),
+                      )
+                    : const SizedBox(),
                 Text(
                   message,
                   style: TextStyle(

@@ -1082,7 +1082,7 @@ public class ConversationHandler {
                     participant.getAndSubscribeUser(new CallbackListener<User>() {
                         @Override
                         public void onSuccess(User user) {
-                            participantMap.put("identity", user.getIdentity());
+                            participantMap.put("friendlyIdentity", user.getIdentity());
                             participantMap.put("friendlyName", user.getFriendlyName());
                             fillParticipantDetails(participant, participantMap);
                             participants.add(participantMap);

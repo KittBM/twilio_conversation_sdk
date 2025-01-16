@@ -41,8 +41,7 @@ class _ConversationState extends State<Conversation> {
   static var accountSid = '';
   static var apiKey = '';
   static var apiSecret = '';
-  static var serviceSid =
-      ''; // Conversation Service SID
+  static var serviceSid = ''; // Conversation Service SID
   static var pushSid = '';
   static var identity = '';
   static var participantIdentity = '';
@@ -72,13 +71,6 @@ class _ConversationState extends State<Conversation> {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       _animateToIndex(messages.length);
     });
-  }
-
-  getParticipants(String conversationId) async {
-    participantList.clear();
-    participantList = await _twilioConversationSdkPlugin
-        .getParticipantsWithName(conversationId: conversationId) ??
-        [];
   }
 
   void getAccessToken(String accountSid, String apiKey, String apiSecret,
@@ -114,8 +106,8 @@ class _ConversationState extends State<Conversation> {
       bool isParticipantFound = false;
       for (Map conversation in conversationList) {
         print("Conversation $conversation");
-        List participantList = await _twilioConversationSdkPlugin
-            .getParticipants(conversationId: conversation["sid"]) ??
+        participantList = await _twilioConversationSdkPlugin
+                .getParticipantsWithName(conversationId: conversation["sid"]) ??
             [];
         for (Map participant in participantList) {
           print("Participant $participant");
@@ -123,7 +115,6 @@ class _ConversationState extends State<Conversation> {
             isParticipantFound = true;
             conversationId = conversation["sid"];
             conversationName = conversation["conversationName"];
-            getParticipants(conversationId);
             subscribe();
             break;
           }
@@ -138,6 +129,7 @@ class _ConversationState extends State<Conversation> {
     } else {
       createConversation();
     }
+    setState(() {});
   }
 
   unsubscribe() {
@@ -249,13 +241,13 @@ class _ConversationState extends State<Conversation> {
     attribute = {"hasMedia": true};
 
     final String? sendMessage =
-    await _twilioConversationSdkPlugin.sendMessageWithMedia(
-        message: "",
-        conversationId: conversationId,
-        attribute: attribute,
-        mediaFilePath: selectedDocPath,
-        mimeType: getMimeType(selectedDocPath),
-        fileName: fileName);
+        await _twilioConversationSdkPlugin.sendMessageWithMedia(
+            message: "",
+            conversationId: conversationId,
+            attribute: attribute,
+            mediaFilePath: selectedDocPath,
+            mimeType: getMimeType(selectedDocPath),
+            fileName: fileName);
     print("Result $sendMessage");
     _progress = 0;
     totalBytes = 0;
@@ -267,7 +259,7 @@ class _ConversationState extends State<Conversation> {
     print("Get Message for $conversationId");
     messages.clear();
     var messageList = await _twilioConversationSdkPlugin.getMessages(
-        conversationId: conversationId) ??
+            conversationId: conversationId) ??
         [];
     messages.addAll(messageList);
     print("Messages $messages");
@@ -278,9 +270,9 @@ class _ConversationState extends State<Conversation> {
 
   addParticipant() async {
     final String? addSecondParticipantConversation =
-    await _twilioConversationSdkPlugin.addParticipant(
-        conversationId: conversationId,
-        participantName: participantIdentity);
+        await _twilioConversationSdkPlugin.addParticipant(
+            conversationId: conversationId,
+            participantName: participantIdentity);
     print("Result Second $addSecondParticipantConversation");
     unsubscribe();
     subscribe();
@@ -294,17 +286,17 @@ class _ConversationState extends State<Conversation> {
         titleSpacing: 10,
         leading: participantIdentity.isNotEmpty
             ? Container(
-            padding: const EdgeInsets.all(10),
-            decoration: const BoxDecoration(
-                color: Colors.black, shape: BoxShape.circle),
-            alignment: Alignment.center,
-            child: Text(
-              participantIdentity.substring(0, 1),
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 25),
-            ))
+                padding: const EdgeInsets.all(10),
+                decoration: const BoxDecoration(
+                    color: Colors.black, shape: BoxShape.circle),
+                alignment: Alignment.center,
+                child: Text(
+                  participantIdentity.substring(0, 1),
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 25),
+                ))
             : Container(),
         title: Text(identity.isEmpty
             ? "Twilio Conversation SDK"
@@ -312,31 +304,31 @@ class _ConversationState extends State<Conversation> {
         actions: [
           accessToken!.isNotEmpty
               ? IconButton(
-            onPressed: () {
-              getAllMessages();
-            },
-            icon: const Icon(Icons.refresh),
-            iconSize: 30,
-          )
+                  onPressed: () {
+                    getAllMessages();
+                  },
+                  icon: const Icon(Icons.refresh),
+                  iconSize: 30,
+                )
               : Container(),
           accessToken!.isNotEmpty
               ? IconButton(
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) {
-                    return ConversationList(
-                        identity, _twilioConversationSdkPlugin);
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return ConversationList(
+                              identity, _twilioConversationSdkPlugin);
+                        },
+                      ),
+                    ).then((data) {
+                      subscribe();
+                    });
+                    unsubscribe();
                   },
-                ),
-              ).then((data) {
-                subscribe();
-              });
-              unsubscribe();
-            },
-            icon: const Icon(Icons.chat),
-            iconSize: 30,
-          )
+                  icon: const Icon(Icons.chat),
+                  iconSize: 30,
+                )
               : Container(),
         ],
       ),
@@ -347,62 +339,62 @@ class _ConversationState extends State<Conversation> {
             children: [
               accessToken!.isEmpty
                   ? Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: TextField(
-                  onChanged: (value) {
-                    identity = value;
-                  },
-                  decoration: const InputDecoration(
-                      labelText: 'Enter your identity'),
-                ),
-              )
+                      padding: const EdgeInsets.all(8.0),
+                      child: TextField(
+                        onChanged: (value) {
+                          identity = value;
+                        },
+                        decoration: const InputDecoration(
+                            labelText: 'Enter your identity'),
+                      ),
+                    )
                   : Container(),
               accessToken!.isEmpty
                   ? Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: TextField(
-                  onChanged: (value) {
-                    participantIdentity = value;
-                  },
-                  decoration: const InputDecoration(
-                      labelText: 'Enter participant identity'),
-                ),
-              )
+                      padding: const EdgeInsets.all(8.0),
+                      child: TextField(
+                        onChanged: (value) {
+                          participantIdentity = value;
+                        },
+                        decoration: const InputDecoration(
+                            labelText: 'Enter participant identity'),
+                      ),
+                    )
                   : Container(),
               accessToken!.isEmpty
                   ? ElevatedButton(
-                onPressed: () {
-                  if (identity.isNotEmpty) {
-                    getAccessToken(accountSid, apiKey, apiSecret,
-                        identity, serviceSid, pushSid);
-                  }
-                },
-                child: Text("Get Access Token"),
-              )
+                      onPressed: () {
+                        if (identity.isNotEmpty) {
+                          getAccessToken(accountSid, apiKey, apiSecret,
+                              identity, serviceSid, pushSid);
+                        }
+                      },
+                      child: Text("Get Access Token"),
+                    )
                   : Container(),
               Expanded(
                   child: messages.isNotEmpty
                       ? Column(
-                    children: [
-                      Visibility(
-                        visible: isSendMedia,
-                        child: LinearProgressIndicator(
-                          value: _progress,
-                          minHeight:
-                          20.0, // Set the height of the progress bar
-                        ),
-                      ),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: ListView.builder(
-                            controller: _controller,
-                            shrinkWrap: true,
-                            itemCount: messages.length,
-                            itemBuilder: (context, index) {
-                              List? attachMedia =
-                                  messages[index]['attachMedia']??[];
-                              return /*InkWell(
+                          children: [
+                            Visibility(
+                              visible: isSendMedia,
+                              child: LinearProgressIndicator(
+                                value: _progress,
+                                minHeight:
+                                    20.0, // Set the height of the progress bar
+                              ),
+                            ),
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: ListView.builder(
+                                  controller: _controller,
+                                  shrinkWrap: true,
+                                  itemCount: messages.length,
+                                  itemBuilder: (context, index) {
+                                    List? attachMedia =
+                                        messages[index]['attachMedia'] ?? [];
+                                    return /*InkWell(
                                       onTap: () async {
                                         await _twilioConversationSdkPlugin
                                             .deleteMessage(
@@ -416,99 +408,99 @@ class _ConversationState extends State<Conversation> {
                                         });
                                       },
                                       child:*/
-                                getMessageView(
-                                    messages[index]["attributes"],
-                                    messages[index]["body"],
-                                    messages[index]["author"],
-                                    messages[index]["dateCreated"],
-                                    attachMedia);
-                              //);
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-                      : const Center(
-                    child: Text(
-                      "No message yet",
-                      style: TextStyle(fontSize: 16, color: Colors.blue),
-                    ),
-                  )),
-              accessToken!.isNotEmpty
-                  ? Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: Colors.blueGrey,
-                        borderRadius: BorderRadius.circular(32),
-                      ),
-                      child: Row(
-                        children: [
-                          Flexible(
-                            child: TextField(
-                              controller: message,
-                              style: const TextStyle(color: Colors.white),
-                              decoration: const InputDecoration(
-                                border: InputBorder.none,
-                                hintText: 'Message',
-                                hintStyle: TextStyle(color: Colors.white),
-                                contentPadding: EdgeInsets.only(
-                                    left: 15,
-                                    bottom: 11,
-                                    top: 11,
-                                    right: 15),
+                                        getMessageView(
+                                            messages[index]["attributes"],
+                                            messages[index]["body"],
+                                            messages[index]["author"],
+                                            messages[index]["dateCreated"],
+                                            attachMedia);
+                                    //);
+                                  },
+                                ),
                               ),
                             ),
+                          ],
+                        )
+                      : const Center(
+                          child: Text(
+                            "No message yet",
+                            style: TextStyle(fontSize: 16, color: Colors.blue),
                           ),
-                          isSendMedia
-                              ? const CircularProgressIndicator()
-                              : IconButton(
-                            onPressed: () async {
-                              if (message.text.isNotEmpty) {
-                                sendMessage();
-                              } else {
-                                showAlert(
-                                    "Please type your message");
-                              }
-                            },
-                            icon: const Icon(
-                              Icons.send,
-                              color: Colors.white,
+                        )),
+              accessToken!.isNotEmpty
+                  ? Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: Colors.blueGrey,
+                              borderRadius: BorderRadius.circular(32),
                             ),
-                            iconSize: 30,
+                            child: Row(
+                              children: [
+                                Flexible(
+                                  child: TextField(
+                                    controller: message,
+                                    style: const TextStyle(color: Colors.white),
+                                    decoration: const InputDecoration(
+                                      border: InputBorder.none,
+                                      hintText: 'Message',
+                                      hintStyle: TextStyle(color: Colors.white),
+                                      contentPadding: EdgeInsets.only(
+                                          left: 15,
+                                          bottom: 11,
+                                          top: 11,
+                                          right: 15),
+                                    ),
+                                  ),
+                                ),
+                                isSendMedia
+                                    ? const CircularProgressIndicator()
+                                    : IconButton(
+                                        onPressed: () async {
+                                          if (message.text.isNotEmpty) {
+                                            sendMessage();
+                                          } else {
+                                            showAlert(
+                                                "Please type your message");
+                                          }
+                                        },
+                                        icon: const Icon(
+                                          Icons.send,
+                                          color: Colors.white,
+                                        ),
+                                        iconSize: 30,
+                                      ),
+                              ],
+                            ),
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  isSendMedia
-                      ? const CircularProgressIndicator()
-                      : Container(
-                    decoration: const BoxDecoration(
-                        color: Colors.black,
-                        shape: BoxShape.circle),
-                    alignment: Alignment.center,
-                    child: IconButton(
-                      onPressed: () async {
-                        pickFileFromDevice();
-                        /*if (message.text.isNotEmpty) {
+                        ),
+                        isSendMedia
+                            ? const CircularProgressIndicator()
+                            : Container(
+                                decoration: const BoxDecoration(
+                                    color: Colors.black,
+                                    shape: BoxShape.circle),
+                                alignment: Alignment.center,
+                                child: IconButton(
+                                  onPressed: () async {
+                                    pickFileFromDevice();
+                                    /*if (message.text.isNotEmpty) {
                                 sendMessage(isSendAttribute: true);
                               } else {
                                 showAlert("Please type your message");
                               }*/
-                      },
-                      icon: const Icon(
-                        Icons.attach_file,
-                        color: Colors.white,
-                      ),
-                      iconSize: 30,
-                    ),
-                  ),
-                ],
-              )
+                                  },
+                                  icon: const Icon(
+                                    Icons.attach_file,
+                                    color: Colors.white,
+                                  ),
+                                  iconSize: 30,
+                                ),
+                              ),
+                      ],
+                    )
                   : Container(),
             ],
           ),
@@ -528,12 +520,12 @@ class _ConversationState extends State<Conversation> {
     String timeAgo;
     timeAgo = Jiffy.parseFromDateTime(dateTime).fromNow();
     for (Map participant in participantList) {
-      print(participant["friendlyIdentity"]);
-      print(participant["friendlyName"]);
       if (participant["friendlyIdentity"] == author) {
-        authorName = participant["friendlyName"] != null && participant["friendlyName"].toString().isEmpty
+        authorName = participant["friendlyName"] != null &&
+                participant["friendlyName"].toString().isNotEmpty
             ? participant["friendlyName"]
             : participant["friendlyIdentity"];
+        print("authorName>>$authorName");
         break;
       }
     }
@@ -547,10 +539,10 @@ class _ConversationState extends State<Conversation> {
         contentType = media['contentType'];
         //String? sid = media['sid'];
       }
-      print("mediaUrl${mediaUrl}") ;
+      print("mediaUrl${mediaUrl}");
       return Align(
         alignment:
-        author == identity ? Alignment.centerRight : Alignment.centerLeft,
+            author == identity ? Alignment.centerRight : Alignment.centerLeft,
         child: Card(
           margin: const EdgeInsets.all(10),
           color: author == identity ? Colors.blue : Colors.black,
@@ -559,58 +551,58 @@ class _ConversationState extends State<Conversation> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                mediaUrl != null && mediaUrl.isNotEmpty
-                    ? contentType == "application/pdf" ||
-                    contentType == "video/mp4"
-                    ? Text(
-                  textAlign: TextAlign.end,
-                  filename ?? "",
-                  style: TextStyle(
-                      color: author == identity
-                          ? Colors.white
-                          : Colors.white,
-                      fontSize: 16),
-                )
-                    : SizedBox(
-                  height: 200,
-                  width: 150,
-                  child: CachedNetworkImage(
-                      imageUrl: mediaUrl,
-                      imageBuilder: (context, imageProvider) =>
-                          Container(
-                            height: 200,
-                            width: 150,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.rectangle,
-                              borderRadius: BorderRadius.circular(10),
-                              image: DecorationImage(
-                                image: imageProvider,
-                                fit: BoxFit.fill,
-                              ),
-                            ),
-                          ),
-                      placeholder: (context, url) => const Center(
-                        child: CircularProgressIndicator(),
-                      )),
-                )
-                    : const SizedBox(),
                 authorName.isNotEmpty
                     ? Text(
-                  textAlign: TextAlign.end,
-                  authorName,
-                  style: const TextStyle(color: Colors.red, fontSize: 10),
-                )
+                        textAlign: TextAlign.end,
+                        authorName,
+                        style: const TextStyle(color: Colors.red, fontSize: 10),
+                      )
+                    : const SizedBox(),
+                mediaUrl != null && mediaUrl.isNotEmpty
+                    ? contentType == "application/pdf" ||
+                            contentType == "video/mp4"
+                        ? Text(
+                            textAlign: TextAlign.end,
+                            filename ?? "",
+                            style: TextStyle(
+                                color: author == identity
+                                    ? Colors.white
+                                    : Colors.white,
+                                fontSize: 16),
+                          )
+                        : SizedBox(
+                            height: 200,
+                            width: 150,
+                            child: CachedNetworkImage(
+                                imageUrl: mediaUrl,
+                                imageBuilder: (context, imageProvider) =>
+                                    Container(
+                                      height: 200,
+                                      width: 150,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.rectangle,
+                                        borderRadius: BorderRadius.circular(10),
+                                        image: DecorationImage(
+                                          image: imageProvider,
+                                          fit: BoxFit.fill,
+                                        ),
+                                      ),
+                                    ),
+                                placeholder: (context, url) => const Center(
+                                      child: CircularProgressIndicator(),
+                                    )),
+                          )
                     : const SizedBox(),
                 message.isNotEmpty
                     ? Text(
-                  textAlign: TextAlign.end,
-                  message,
-                  style: TextStyle(
-                      color: author == identity
-                          ? Colors.white
-                          : Colors.white,
-                      fontSize: 10),
-                )
+                        textAlign: TextAlign.end,
+                        message,
+                        style: TextStyle(
+                            color: author == identity
+                                ? Colors.white
+                                : Colors.white,
+                            fontSize: 10),
+                      )
                     : const SizedBox(),
                 Text(
                   textAlign: TextAlign.end,
@@ -629,7 +621,7 @@ class _ConversationState extends State<Conversation> {
       if (attributeModel['url'] != null) {
         return Align(
           alignment:
-          author == identity ? Alignment.centerRight : Alignment.centerLeft,
+              author == identity ? Alignment.centerRight : Alignment.centerLeft,
           child: Card(
             margin: const EdgeInsets.all(10),
             color: author == identity ? Colors.blue : Colors.black,
@@ -657,7 +649,7 @@ class _ConversationState extends State<Conversation> {
                       timeAgo,
                       style: TextStyle(
                           color:
-                          author == identity ? Colors.white : Colors.white,
+                              author == identity ? Colors.white : Colors.white,
                           fontSize: 10),
                     ),
                   ],
@@ -669,7 +661,7 @@ class _ConversationState extends State<Conversation> {
       } else {
         return Align(
           alignment:
-          author == identity ? Alignment.centerRight : Alignment.centerLeft,
+              author == identity ? Alignment.centerRight : Alignment.centerLeft,
           child: Card(
             margin: const EdgeInsets.all(10),
             child: Padding(
@@ -679,11 +671,11 @@ class _ConversationState extends State<Conversation> {
                 children: [
                   authorName.isNotEmpty
                       ? Text(
-                    textAlign: TextAlign.end,
-                    authorName,
-                    style:
-                    const TextStyle(color: Colors.red, fontSize: 10),
-                  )
+                          textAlign: TextAlign.end,
+                          authorName,
+                          style:
+                              const TextStyle(color: Colors.red, fontSize: 10),
+                        )
                       : const SizedBox(),
                   Text(
                     message,
@@ -707,7 +699,7 @@ class _ConversationState extends State<Conversation> {
     } else {
       return Align(
         alignment:
-        author == identity ? Alignment.centerRight : Alignment.centerLeft,
+            author == identity ? Alignment.centerRight : Alignment.centerLeft,
         child: Card(
           margin: const EdgeInsets.all(10),
           child: Padding(
@@ -717,10 +709,10 @@ class _ConversationState extends State<Conversation> {
               children: [
                 authorName.isNotEmpty
                     ? Text(
-                  textAlign: TextAlign.end,
-                  authorName,
-                  style: const TextStyle(color: Colors.red, fontSize: 10),
-                )
+                        textAlign: TextAlign.end,
+                        authorName,
+                        style: const TextStyle(color: Colors.red, fontSize: 10),
+                      )
                     : const SizedBox(),
                 Text(
                   message,
@@ -745,8 +737,8 @@ class _ConversationState extends State<Conversation> {
 
   String convertUTCToLocalChat(
       {required String utcDateTime,
-        required DateFormat inputDateFormat,
-        required DateFormat outputDateFormat}) {
+      required DateFormat inputDateFormat,
+      required DateFormat outputDateFormat}) {
     try {
       // Parse the UTC date string
       DateTime utcDate = inputDateFormat.parseUtc(utcDateTime);
@@ -782,15 +774,15 @@ class _ConversationState extends State<Conversation> {
     );
 
     if (result != null &&
-        result.files.single.path!
-            .isNotEmpty /*&&
+            result.files.single.path!
+                .isNotEmpty /*&&
             result.files.single.path!.contains(".pdf") ||
         result!.files.single.path!.contains(".jpg") ||
         result.files.single.path!.contains(".jpeg") ||
         result.files.single.path!.contains(".png") ||
         result.files.single.path!.contains(".doc") ||
         result.files.single.path!.contains(".docx")*/
-    ) {
+        ) {
       selectedDocPath = result.files.single.path!;
       fileName = result.files.single.name;
       totalBytes = result.files.single.size;

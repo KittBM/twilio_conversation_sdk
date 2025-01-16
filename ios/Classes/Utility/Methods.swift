@@ -21,4 +21,7 @@ class Methods {
     static let updateAccessToken: String = "updateAccessToken"
     static let getLastMessages: String = "getLastMessages"
     static let getUnReadMsgCount: String = "getUnReadMsgCount"
+    static let sendMessageWithMedia: String = "sendMessageWithMedia"
+    static let getParticipantsWithName: String = "getParticipantsWithName"
+
 }

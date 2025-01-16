@@ -171,6 +171,68 @@ public class TwilioConversationSdkPlugin: NSObject, FlutterPlugin,FlutterStreamH
                 result(listOfParticipants)
             }
             break
+        case Methods.getParticipantsWithName:
+            var listOfParticipants: [[String: Any]] = []
+
+            // Fetch participants for the provided conversation ID
+            self.conversationsHandler.getParticipants(conversationId: arguments?["conversationId"] as! String) { participantsList in
+                // Create a DispatchGroup to track asynchronous tasks
+                let dispatchGroup = DispatchGroup()
+
+                // Loop through each participant in the fetched list
+                for user in participantsList {
+                    var participant: [String: Any] = [:]
+                    
+                    // Ensure identity is not nil or empty
+                    if !ConvertorUtility.isNilOrEmpty(user.identity) {
+                        participant["identity"] = user.identity
+                        participant["sid"] = user.sid
+                        participant["conversationSid"] = user.conversation?.sid
+                        participant["dateCreated"] = user.dateCreated
+                        participant["conversationCreatedBy"] = user.conversation?.createdBy
+                        participant["isAdmin"] = (user.conversation?.createdBy == user.identity)
+                        // Handle attributes serialization
+                        do {
+                            let jsonData = try JSONSerialization.data(withJSONObject: user.attributes()?.dictionary ?? [:], options: .prettyPrinted)
+                            if let jsonString = String(data: jsonData, encoding: .utf8) {
+                                print(jsonString)
+                                participant["attributes"] = jsonString
+                            }
+                        } catch {
+                            // Handle error in serialization
+                            print("Error converting dictionary to string: \(error.localizedDescription)")
+                            participant["attributes"] = ""  // Provide empty string if serialization fails
+                        }
+                        // Enter the DispatchGroup before making the async call
+                        dispatchGroup.enter()
+                        
+                        // Call the subscribedUser method asynchronously
+                        user.subscribedUser { result, users in
+                            // Update participant data with the user details
+                            participant["friendlyIdentity"] = users?.identity
+                            participant["friendlyName"] = users?.friendlyName
+
+                           
+
+                            // Add the participant to the list once the subscribedUser completes
+                            listOfParticipants.append(participant)
+                            
+                            // Leave the DispatchGroup after finishing the async task
+                            dispatchGroup.leave()
+                        }
+                    }
+                }
+
+                // Once all async tasks are finished, notify and return the result
+                dispatchGroup.notify(queue: .main) {
+                    result(listOfParticipants)  // Return the list of participants once everything is done
+                }
+            }
+            break
+
+
+            
+ 
         case Methods.addParticipant:
             self.conversationsHandler.addParticipants(conversationId: arguments?["conversationId"] as! String, participantName: arguments?["participantName"] as! String) { status in
                 if let addParticipantStatus = status {
@@ -237,6 +299,25 @@ public class TwilioConversationSdkPlugin: NSObject, FlutterPlugin,FlutterStreamH
                     result(tchResult.resultText)
                 }
             }
+            break
+        case Methods.sendMessageWithMedia:
+            self.conversationsHandler.sendMessageWithMedia(conversationId: arguments?["conversationId"] as! String, messageText: arguments?["message"] as! String, attributes: arguments?["attribute"] as! [String : Any], mediaFilePath: arguments?["mediaFilePath"] as! String, mimeType: arguments?["mimeType"] as! String, fileName: arguments?["fileName"] as! String ){ tchResult, tchMessages in
+                if (tchResult.isSuccessful){
+                    print("sendMessageWithMedia send success")
+                    result("send")
+                }else {
+                    result(tchResult.resultText)
+                }
+            }
+
+//            self.conversationsHandler.sendMessage(conversationId: arguments?["conversationId"] as! String, messageText: arguments?["message"] as! String,
+//                attributes: arguments?["attribute"] as! [String : Any]) { tchResult, tchMessages in
+//                if (tchResult.isSuccessful){
+//                    result("send")
+//                }else {
+//                    result(tchResult.resultText)
+//                }
+
             break
         case Methods.subscribeToMessageUpdate:
             if let conversationId = arguments?["conversationId"] as? String {

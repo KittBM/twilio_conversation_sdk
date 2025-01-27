@@ -399,7 +399,7 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
         conversation.getLastMessages(withCount: messageCount ?? 1) { (result, messages) in
             if let messagesList = messages {
                 messagesList.forEach { message in
-                    self.getMessageInDictionary(message) { messageDictionary in
+                    self.getMessageInDictionaryWithMsg(message) { messageDictionary in
                         if let messageDict = messageDictionary {
                             listOfMessagess.append(messageDict)
                         }
@@ -491,6 +491,33 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
         }
     }
 
+    func getMessageInDictionaryWithMsg(_ message: TCHMessage, _ completion: @escaping ([String: Any]?) -> Void) {
+        var dictionary: [String: Any] = [:]
+        var attachedMedia: [[String: Any]] = []
+
+        dictionary["sid"] = message.participantSid
+        dictionary["author"] = message.author
+        dictionary["body"] = message.body
+
+        do {
+                    let attributes = message.attributes()?.dictionary ?? [:]
+                    let jsonData = try JSONSerialization.data(withJSONObject: attributes, options: .prettyPrinted)
+                    if let jsonString = String(data: jsonData, encoding: .utf8) {
+                        dictionary["attributes"] = jsonString
+                    }
+                } catch {
+                    print("Error converting dictionary to string: \(error.localizedDescription)")
+                    dictionary["attributes"] = ""
+                }
+
+
+        dictionary["lastMessageDate"] = formatLastMessageDateISO8601(lastMessageDateString: message.dateUpdated?.description ?? "")
+        dictionary["dateCreated"] = message.dateCreated?.description ?? ""
+        dictionary["lastMessage"] = message.body
+
+        // Fetch media details
+        completion(dictionary) // Complete after all media details are processed
+    }
 
 
 }

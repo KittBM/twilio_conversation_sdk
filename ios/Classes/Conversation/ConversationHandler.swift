@@ -514,6 +514,8 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
         dictionary["lastMessageDate"] = formatLastMessageDateISO8601(lastMessageDateString: message.dateUpdated?.description ?? "")
         dictionary["dateCreated"] = message.dateCreated?.description ?? ""
         dictionary["lastMessage"] = message.body
+        dictionary["mediaCount"] = message.attachedMedia.count
+
 
         // Fetch media details
         completion(dictionary) // Complete after all media details are processed

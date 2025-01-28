@@ -598,6 +598,7 @@ public class ConversationHandler {
                             conversationMap.put("sid", conversationId);
                             conversationMap.put("lastMessage", messages.get(0).getBody());
                             conversationMap.put("attributes", messages.get(0).getAttributes().toString());
+                            conversationMap.put("mediaCount", messages.get(0).getAttachedMedia().size());
                             if (conversation.getLastMessageDate() != null) {
                                 SimpleDateFormat inputFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
                                 SimpleDateFormat outputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");

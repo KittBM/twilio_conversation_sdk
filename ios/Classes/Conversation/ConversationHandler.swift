@@ -8,21 +8,21 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
     
     
     // MARK: Conversations variables
-   private var client: TwilioConversationsClient?
+    private var client: TwilioConversationsClient?
     var lastReadIndex: NSNumber?
     weak var messageDelegate: MessageDelegate?
     weak var clientDelegate: ClientDelegate?
-     var isSubscribe:Bool?
+    var isSubscribe:Bool?
     var conversationId : String?
     public var messageSubscriptionId: String = ""
     var tokenEventSink: FlutterEventSink?
 
-    
-    
-//    MARK: raw
+
+
+    //    MARK: raw
     func conversationsClient(_ client: TwilioConversationsClient, conversation: TCHConversation,
-                    messageAdded message: TCHMessage) {
-        
+                             messageAdded message: TCHMessage) {
+
         var attachedMedia: [[String: Any]] = []
         guard client.synchronizationStatus == .completed else {
             return
@@ -67,7 +67,7 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
 
                 self.messageDelegate?.onMessageUpdate(message: updatedMessage, messageSubscriptionId: self.messageSubscriptionId)
 
-//                print("lastReadIndex \(conversation.lastMessageIndex)")
+                //                print("lastReadIndex \(conversation.lastMessageIndex)")
 
             }
         }
@@ -75,33 +75,33 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
 
     func registerFCMToken(token: String,completion: @escaping (_ success : Bool) -> Void){
 
-         let data = token.hexToData
-//        print(data) // Output: 5 bytes
+        let data = token.hexToData
+        //        print(data) // Output: 5 bytes
 
 
         self.client?.register(withNotificationToken: data ?? Data(), completion: { result in
-             if result.isSuccessful {
-                 completion(true)
-             }
-             print("Twilio Notification Token Set: \(result) with token \(token)")
-             print("Device push token registration was\(result.isSuccessful ? "" : " not") successful")
-         })
-     }
+            if result.isSuccessful {
+                completion(true)
+            }
+            print("Twilio Notification Token Set: \(result) with token \(token)")
+            print("Device push token registration was\(result.isSuccessful ? "" : " not") successful")
+        })
+    }
 
     func unregisterFCMToken(token: String,completion: @escaping (_ success : Bool) -> Void){
 
-         let data = token.hexToData
-//        print(data) // Output: 5 bytes
+        let data = token.hexToData
+        //        print(data) // Output: 5 bytes
 
 
         self.client?.deregister(withNotificationToken: data ?? Data(), completion: { result in
-             if result.isSuccessful {
-                 completion(true)
-             }
-             print("Twilio Notification Token deregister: \(result) with token \(token)")
-             print("Device push token deregister \(result.isSuccessful ? "" : " not") successful")
-         })
-     }
+            if result.isSuccessful {
+                completion(true)
+            }
+            print("Twilio Notification Token deregister: \(result) with token \(token)")
+            print("Device push token deregister \(result.isSuccessful ? "" : " not") successful")
+        })
+    }
 
 
     func conversationsClient(_ client: TwilioConversationsClient, conversation: TCHConversation, synchronizationStatusUpdated status: TCHConversationSynchronizationStatus) {
@@ -129,18 +129,18 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
         self.clientDelegate?.onClientSynchronizationChanged(status: ["status":client.synchronizationStatus.rawValue])
         print("StatusClient \(client.synchronizationStatus.rawValue) ")
 
-//            checkConversationCreation { (_, conversation) in
-//               if let conversation = conversation {
-//                   self.joinConversation(conversation)
-//               } else {
-//                   self.createConversation { (success, conversation) in
-//                       if success, let conversation = conversation {
-//                           self.joinConversation(conversation)
-//                       }
-//                   }
-//               }
-//            }
-        }
+        //            checkConversationCreation { (_, conversation) in
+        //               if let conversation = conversation {
+        //                   self.joinConversation(conversation)
+        //               } else {
+        //                   self.createConversation { (success, conversation) in
+        //                       if success, let conversation = conversation {
+        //                           self.joinConversation(conversation)
+        //                       }
+        //                   }
+        //               }
+        //            }
+    }
 
 
 
@@ -162,25 +162,25 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
 
     func sendMessage(conversationId: String,
                      messageText: String,
-                      attributes: [String: Any],
-                      completion: @escaping (TCHResult, TCHMessage?) -> Void) {
+                     attributes: [String: Any],
+                     completion: @escaping (TCHResult, TCHMessage?) -> Void) {
         // Fetch the conversation using the provided ID
         self.getConversationFromId(conversationId: conversationId) { conversation in
-//            if let error = error {
-//                print("Error fetching conversation: \(error.localizedDescription)")
-//                result(.failure(error))
-//                return
-//            }
+            //            if let error = error {
+            //                print("Error fetching conversation: \(error.localizedDescription)")
+            //                result(.failure(error))
+            //                return
+            //            }
 
 
             // Convert attributes dictionary into Attributes type
 
-                let attributesObject : TCHJsonAttributes = TCHJsonAttributes(dictionary: attributes)
+            let attributesObject : TCHJsonAttributes = TCHJsonAttributes(dictionary: attributes)
 
-                // Prepare and send the message
-                conversation?.prepareMessage()
-                    .setAttributes(attributesObject, error: nil)
-                    .setBody(messageText).buildAndSend(completion: { tchResult, tchMessages in
+            // Prepare and send the message
+            conversation?.prepareMessage()
+                .setAttributes(attributesObject, error: nil)
+                .setBody(messageText).buildAndSend(completion: { tchResult, tchMessages in
                     completion(tchResult,tchMessages)
                 })
 
@@ -189,51 +189,51 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
     }
 
     func sendMessageWithMedia(conversationId: String,
-                     messageText: String,
-                      attributes: [String: Any],
+                              messageText: String,
+                              attributes: [String: Any],
                               mediaFilePath : String,
                               mimeType : String,
                               fileName :String ,
-                      completion: @escaping (TCHResult, TCHMessage?) -> Void) {
+                              completion: @escaping (TCHResult, TCHMessage?) -> Void) {
         // Fetch the conversation using the provided ID
         self.getConversationFromId(conversationId: conversationId) { conversation in
-//            if let error = error {
-//                print("Error fetching conversation: \(error.localizedDescription)")
-//                result(.failure(error))
-//                return
-//            }
+            //            if let error = error {
+            //                print("Error fetching conversation: \(error.localizedDescription)")
+            //                result(.failure(error))
+            //                return
+            //            }
 
 
             // Convert attributes dictionary into Attributes type
 
-                let attributesObject : TCHJsonAttributes = TCHJsonAttributes(dictionary: attributes)
+            let attributesObject : TCHJsonAttributes = TCHJsonAttributes(dictionary: attributes)
 
             guard let fileInputStream = InputStream(fileAtPath: mediaFilePath) else {
-                           print("Error opening media file at path: \(mediaFilePath)")
-                           return
-                       }
+                print("Error opening media file at path: \(mediaFilePath)")
+                return
+            }
 
-                // Prepare and send the message
-                conversation?.prepareMessage()
-                    .setAttributes(attributesObject, error: nil)
-                    .setBody(messageText)
-                    .addMedia(inputStream: fileInputStream, contentType: mimeType, filename: fileName, listener: MediaMessageListener(
-                                        onStarted: {
-                                            print("Media upload started.")
-                                        },
-                                        onProgress: { bytesSent in
-                                            print("Media upload progress: \(bytesSent) bytes sent.")
-                                        },
-                                        onCompleted: { mediaSid in
-                                            print("Media uploaded successfully with SID: \(mediaSid)")
-                                        },
-                                        onFailed: { error in
-                                            print("Media upload failed: \(error.localizedDescription )")
-                                        }
-                                    ))
-                    .buildAndSend(completion: { tchResult, tchMessages in
+            // Prepare and send the message
+            conversation?.prepareMessage()
+                .setAttributes(attributesObject, error: nil)
+                .setBody(messageText)
+                .addMedia(inputStream: fileInputStream, contentType: mimeType, filename: fileName, listener: MediaMessageListener(
+                    onStarted: {
+                        print("Media upload started.")
+                    },
+                    onProgress: { bytesSent in
+                        print("Media upload progress: \(bytesSent) bytes sent.")
+                    },
+                    onCompleted: { mediaSid in
+                        print("Media uploaded successfully with SID: \(mediaSid)")
+                    },
+                    onFailed: { error in
+                        print("Media upload failed: \(error.localizedDescription )")
+                    }
+                ))
+                .buildAndSend(completion: { tchResult, tchMessages in
                     completion(tchResult,tchMessages)
-                    })
+                })
 
 
         }
@@ -243,12 +243,12 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
     func loginWithAccessToken(_ token: String, completion: @escaping (TCHResult?) -> Void) {
         // Set up Twilio Conversations client
         TwilioConversationsClient.conversationsClient(withToken: token,
-         properties: nil,
-         delegate: self) { (result, client) in
-           self.client = client
+                                                      properties: nil,
+                                                      delegate: self) { (result, client) in
+            self.client = client
             self.clientDelegate?.onClientSynchronizationChanged(status: ["status" : client?.synchronizationStatus.rawValue ?? -1])
             print("\(client?.synchronizationStatus.rawValue ?? -1)")
-//            self.client?.delegate?.conversationsClient?(<#T##client: TwilioConversationsClient##TwilioConversationsClient#>, synchronizationStatusUpdated: TCHClientSynchronizationStatus)
+            //            self.client?.delegate?.conversationsClient?(<#T##client: TwilioConversationsClient##TwilioConversationsClient#>, synchronizationStatusUpdated: TCHClientSynchronizationStatus)
             completion(result)
         }
     }
@@ -269,7 +269,7 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
         let options: [String: Any] = [
             TCHConversationOptionUniqueName: uniqueConversationName,
             TCHConversationOptionFriendlyName: uniqueConversationName,
-            ]
+        ]
         client.createConversation(options: options) { (result, conversation) in
             if result.isSuccessful {
                 completion(result.isSuccessful, conversation,result.resultText ?? "Conversation created.")
@@ -316,15 +316,15 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
 
     func joinConversation(_ conversation: TCHConversation,_ completion: @escaping(String?) -> Void) {
         if conversation.status == .joined {
-//            self.loadPreviousMessages(conversation,1000) { listOfMessages in
-//
-//            }
+            //            self.loadPreviousMessages(conversation,1000) { listOfMessages in
+            //
+            //            }
         } else {
             conversation.join(completion: { result in
                 if result.isSuccessful {
-//                    self.loadPreviousMessages(conversation,1000) { listOfMessages in
-//
-//                    }
+                    //                    self.loadPreviousMessages(conversation,1000) { listOfMessages in
+                    //
+                    //                    }
                 }
             })
         }
@@ -390,6 +390,34 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
     }
 
 
+    func processMessagesSequentiallyForParticipants(_ conversation: TCHConversation,
+                                                    messagesList: [TCHMessage],
+                                                    listOfMessagess: [[String: Any]] = [],
+                                                    completion: @escaping ([[String: Any]]) -> Void
+    ) {
+        var listOfMessagess = listOfMessagess // Create a local copy to modify
+
+        var index = 0 // Start index
+
+        func processNextMessage() {
+            if index < messagesList.count { // Ensure we're within bounds
+                self.getMessageInDictionaryWithMsg(conversation,messagesList[index]) { messageDictionary in
+                    if let messageDict = messageDictionary {
+                        listOfMessagess.append(messageDict)
+                    }
+                    index += 1 // Increment the index
+                    processNextMessage() // Process the next message
+                }
+            } else {
+                // All messages have been processed
+                completion(listOfMessagess) // Return the final list
+            }
+        }
+
+        processNextMessage() // Start processing
+    }
+
+
     func getLastMessage(_ conversation: TCHConversation,_ messageCount: UInt?,_ completion: @escaping([[String: Any]]?) -> Void) {
         print("synchronizationStatus->\(client?.synchronizationStatus == .completed)")
         guard client?.synchronizationStatus == .completed else {
@@ -398,14 +426,9 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
         var listOfMessagess: [[String: Any]] = []
         conversation.getLastMessages(withCount: messageCount ?? 1) { (result, messages) in
             if let messagesList = messages {
-                messagesList.forEach { message in
-                    self.getMessageInDictionaryWithMsg(message) { messageDictionary in
-                        if let messageDict = messageDictionary {
-                            listOfMessagess.append(messageDict)
-                        }
-                    }
+                self.processMessagesSequentiallyForParticipants(conversation,messagesList: messagesList) { result in
+                    completion(result) // Return the final processed list
                 }
-                completion(listOfMessagess)
             }
         }
     }
@@ -423,7 +446,7 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
                     dictionary["sid"] = conversationId
                     dictionary["unReadCount"] = count
                     list.append(dictionary)
-                completion(list)
+                    completion(list)
                 }
                 else{
                     print("No Unread Count")
@@ -446,15 +469,15 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
         dictionary["body"] = message.body
 
         do {
-                    let attributes = message.attributes()?.dictionary ?? [:]
-                    let jsonData = try JSONSerialization.data(withJSONObject: attributes, options: .prettyPrinted)
-                    if let jsonString = String(data: jsonData, encoding: .utf8) {
-                        dictionary["attributes"] = jsonString
-                    }
-                } catch {
-                    print("Error converting dictionary to string: \(error.localizedDescription)")
-                    dictionary["attributes"] = ""
-                }
+            let attributes = message.attributes()?.dictionary ?? [:]
+            let jsonData = try JSONSerialization.data(withJSONObject: attributes, options: .prettyPrinted)
+            if let jsonString = String(data: jsonData, encoding: .utf8) {
+                dictionary["attributes"] = jsonString
+            }
+        } catch {
+            print("Error converting dictionary to string: \(error.localizedDescription)")
+            dictionary["attributes"] = ""
+        }
 
 
         dictionary["lastMessageDate"] = formatLastMessageDateISO8601(lastMessageDateString: message.dateUpdated?.description ?? "")
@@ -491,69 +514,80 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
         }
     }
 
-    func getMessageInDictionaryWithMsg(_ message: TCHMessage, _ completion: @escaping ([String: Any]?) -> Void) {
+    func getMessageInDictionaryWithMsg(_ conversation: TCHConversation,_ message: TCHMessage, _ completion: @escaping ([String: Any]?) -> Void) {
         var dictionary: [String: Any] = [:]
-        var attachedMedia: [[String: Any]] = []
+        var attachedParticipantsData: [[String: Any]] = []
 
         dictionary["sid"] = message.participantSid
         dictionary["author"] = message.author
         dictionary["body"] = message.body
 
         do {
-                    let attributes = message.attributes()?.dictionary ?? [:]
-                    let jsonData = try JSONSerialization.data(withJSONObject: attributes, options: .prettyPrinted)
-                    if let jsonString = String(data: jsonData, encoding: .utf8) {
-                        dictionary["attributes"] = jsonString
-                    }
-                } catch {
-                    print("Error converting dictionary to string: \(error.localizedDescription)")
-                    dictionary["attributes"] = ""
-                }
+            let attributes = message.attributes()?.dictionary ?? [:]
+            let jsonData = try JSONSerialization.data(withJSONObject: attributes, options: .prettyPrinted)
+            if let jsonString = String(data: jsonData, encoding: .utf8) {
+                dictionary["attributes"] = jsonString
+            }
+        } catch {
+            print("Error converting dictionary to string: \(error.localizedDescription)")
+            dictionary["attributes"] = ""
+        }
 
+        let participantsDispatchGroup = DispatchGroup()
 
         dictionary["lastMessageDate"] = formatLastMessageDateISO8601(lastMessageDateString: message.dateUpdated?.description ?? "")
         dictionary["dateCreated"] = message.dateCreated?.description ?? ""
         dictionary["lastMessage"] = message.body
         dictionary["mediaCount"] = message.attachedMedia.count
+        dictionary["participantsCount"] = conversation.participants().count
+        dictionary["isGroup"] = conversation.participants().count > 2
 
+        var friendlyIdentity = ""
+        var friendlyName = ""
 
-        // Fetch media details
-        completion(dictionary) // Complete after all media details are processed
+        participantsDispatchGroup.enter()
+
+        message.participant?.subscribedUser { result, users in
+            friendlyIdentity = users?.identity ?? ""
+            friendlyName = users?.friendlyName ?? ""
+                participantsDispatchGroup.leave()
+            }
+
+        participantsDispatchGroup.notify(queue: .main) {
+            dictionary["friendlyIdentity"] = friendlyIdentity
+            dictionary["friendlyName"] = friendlyName
+
+            print(dictionary)
+            completion(dictionary) // Complete after all media details are processed
+        }
+
     }
 
 
-}
 
 
+    func formatLastMessageDateISO8601(lastMessageDateString: String?) -> String? {
+        // Create an ISO8601 date formatter for the input
+        let inputFormatter = ISO8601DateFormatter()
+        inputFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
 
+        // Create a standard date formatter for the desired output
+        let outputFormatter = DateFormatter()
+        outputFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss Z"
+        outputFormatter.timeZone = TimeZone(abbreviation: "UTC") // Convert to UTC
 
-func formatLastMessageDateISO8601(lastMessageDateString: String?) -> String? {
-    // Create an ISO8601 date formatter for the input
-    let inputFormatter = ISO8601DateFormatter()
-    inputFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-    
-    // Create a standard date formatter for the desired output
-    let outputFormatter = DateFormatter()
-    outputFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss Z"
-    outputFormatter.timeZone = TimeZone(abbreviation: "UTC") // Convert to UTC
-    
-    // Parse the input date and format it to the desired output
-    if let date = inputFormatter.date(from: lastMessageDateString ?? "") {
-        let outputDateString = outputFormatter.string(from: date)
-        print("lastMessageDateTime->\(outputDateString)")
-        return outputDateString
-    } else {
-        print("Failed to parse date string")
-        return nil
+        // Parse the input date and format it to the desired output
+        if let date = inputFormatter.date(from: lastMessageDateString ?? "") {
+            let outputDateString = outputFormatter.string(from: date)
+            print("lastMessageDateTime->\(outputDateString)")
+            return outputDateString
+        } else {
+            print("Failed to parse date string")
+            return nil
+        }
     }
 }
 
-// Example usage:
-//if let formattedDate = formatLastMessageDateISO8601(lastMessageDateString: "2024-11-22T12:16:21.780Z") {
-//    print("Formatted Date: \(formattedDate)")
-//} else {
-//    print("Date parsing failed.")
-//}
 extension String {
     var hexToData: Data? {
         // Ensure the string contains a valid hex format and even number of characters

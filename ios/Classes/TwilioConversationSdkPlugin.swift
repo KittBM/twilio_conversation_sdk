@@ -134,9 +134,12 @@ public class TwilioConversationSdkPlugin: NSObject, FlutterPlugin,FlutterStreamH
                         dictionary["lastMessageDate"] = conversation.lastMessageDate?.description
                     }
                     dictionary["uniqueName"] = conversation.uniqueName
+                    dictionary["participantsCount"] = conversation.participants().count
+                    dictionary["isGroup"] = conversation.participants().count > 2
                     if (ConvertorUtility.isNilOrEmpty(dictionary["conversationName"]) == false && ConvertorUtility.isNilOrEmpty(dictionary["sid"]) == false){
                         listOfConversations.append(dictionary)
                     }
+                    print(dictionary)
                 }
                 result(listOfConversations)
             }
@@ -182,7 +185,7 @@ public class TwilioConversationSdkPlugin: NSObject, FlutterPlugin,FlutterStreamH
                 // Loop through each participant in the fetched list
                 for user in participantsList {
                     var participant: [String: Any] = [:]
-                    
+
                     // Ensure identity is not nil or empty
                     if !ConvertorUtility.isNilOrEmpty(user.identity) {
                         participant["identity"] = user.identity
@@ -205,15 +208,12 @@ public class TwilioConversationSdkPlugin: NSObject, FlutterPlugin,FlutterStreamH
                         }
                         // Enter the DispatchGroup before making the async call
                         dispatchGroup.enter()
-                        
+
                         // Call the subscribedUser method asynchronously
                         user.subscribedUser { result, users in
                             // Update participant data with the user details
                             participant["friendlyIdentity"] = users?.identity
                             participant["friendlyName"] = users?.friendlyName
-
-                           
-
                             // Add the participant to the list once the subscribedUser completes
                             listOfParticipants.append(participant)
                             

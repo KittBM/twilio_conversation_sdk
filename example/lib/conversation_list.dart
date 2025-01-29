@@ -47,14 +47,18 @@ class _ConversationListState extends State<ConversationList> {
 
         if (lastMessage.isNotEmpty) {
           // Extract the message body from the fetched last message
-          var messageBody = lastMessage[0]['lastMessage'] ??
-              'No message'; // Default if no body
+          var messageBody = lastMessage[0]['lastMessage'] ?? 'No message';
+          var friendlyName = lastMessage[0]['friendlyName'] ??
+              'No friendlyName'; // Default if no body
+          var friendlyIdentity = lastMessage[0]['friendlyIdentity'] ??
+              'No friendlyIdentity'; // Default if no body
 
           // Find and update the conversation in conversationList by matching sid
           int index = conversationList.indexWhere((c) => c['sid'] == sid);
           if (index != -1) {
             // Update the conversation with the last message
-            conversationList[index]['lastMessage'] = messageBody;
+            conversationList[index]['lastMessage'] =
+                friendlyIdentity + ": " + messageBody;
           }
         }
 
@@ -161,7 +165,8 @@ class _ConversationListState extends State<ConversationList> {
                           direction: DismissDirection.endToStart,
                           onDismissed: (direction) async {
                             await deleteConversation(
-                                conversationList.elementAt(index)['sid'], index);
+                                conversationList.elementAt(index)['sid'],
+                                index);
                           },
                           background: Container(
                             color: Colors.red,
@@ -173,70 +178,73 @@ class _ConversationListState extends State<ConversationList> {
                             ),
                           ),
                           child: SizedBox(
-                          child: Padding(
-                            padding: const EdgeInsets.all(10.0),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Container(
-                                    padding: const EdgeInsets.all(10),
-                                    decoration: const BoxDecoration(
-                                        color: Colors.black,
-                                        shape: BoxShape.circle),
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      conversationName.substring(0, 1),
-                                      style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 25),
-                                    )),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(conversationName),
-                                      lastMessage != null
-                                          ? Text(
-                                              lastMessage,
-                                              style: const TextStyle(
-                                                  color: Colors.blue,
-                                                  fontWeight: FontWeight.normal),
-                                            )
-                                          : const SizedBox(),
-                                    ],
-                                  ),
-                                ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      formattedTime,
-                                      style: TextStyle(
-                                          color: unreadIndex != 0
-                                              ? Colors.green
-                                              : Colors.grey,
-                                          fontWeight: FontWeight.normal),
+                            child: Padding(
+                              padding: const EdgeInsets.all(10.0),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: const BoxDecoration(
+                                          color: Colors.black,
+                                          shape: BoxShape.circle),
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        conversationName.substring(0, 1),
+                                        style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 25),
+                                      )),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(conversationName),
+                                        lastMessage != null
+                                            ? Text(
+                                                lastMessage,
+                                                style: const TextStyle(
+                                                    color: Colors.blue,
+                                                    fontWeight:
+                                                        FontWeight.normal),
+                                              )
+                                            : const SizedBox(),
+                                      ],
                                     ),
-                                    unreadIndex != 0
-                                        ? Container(
-                                            padding: const EdgeInsets.all(10),
-                                            decoration: const BoxDecoration(
-                                                color: Colors.black,
-                                                shape: BoxShape.circle),
-                                            child: Text(
-                                              unreadIndex.toString(),
-                                              style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold),
-                                            ))
-                                        : Container()
-                                  ],
-                                )
-                              ],
+                                  ),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        formattedTime,
+                                        style: TextStyle(
+                                            color: unreadIndex != 0
+                                                ? Colors.green
+                                                : Colors.grey,
+                                            fontWeight: FontWeight.normal),
+                                      ),
+                                      unreadIndex != 0
+                                          ? Container(
+                                              padding: const EdgeInsets.all(10),
+                                              decoration: const BoxDecoration(
+                                                  color: Colors.black,
+                                                  shape: BoxShape.circle),
+                                              child: Text(
+                                                unreadIndex.toString(),
+                                                style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ))
+                                          : Container()
+                                    ],
+                                  )
+                                ],
+                              ),
                             ),
                           ),
-                        ),
                         ),
                       ),
                     );

@@ -545,9 +545,16 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
         var friendlyIdentity = ""
         var friendlyName = ""
 
+        guard let participant = message.participant else {
+            completion(dictionary)
+            return// Complete after all media details are processed
+        }
+      
+        
         participantsDispatchGroup.enter()
 
-        message.participant?.subscribedUser { result, users in
+        
+        participant.subscribedUser { result, users in
             friendlyIdentity = users?.identity ?? ""
             friendlyName = users?.friendlyName ?? ""
                 participantsDispatchGroup.leave()

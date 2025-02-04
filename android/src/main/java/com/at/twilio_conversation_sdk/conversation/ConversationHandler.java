@@ -651,48 +651,52 @@ public class ConversationHandler {
                 Map<String, Object> conversationMap = new HashMap<>();
 
                 conversation.getLastMessages(1, new CallbackListener<List<Message>>() {
-                    @Override
-                    public void onSuccess(List<Message> messages) {
-                        if (!messages.isEmpty()) {
-                            Message lastMessage = messages.get(0);
-                            conversationMap.put("sid", conversationId);
-                            conversationMap.put("lastMessage", lastMessage.getBody());
-                            conversationMap.put("attributes", lastMessage.getAttributes().toString());
-                            conversationMap.put("mediaCount", lastMessage.getAttachedMedia().size());
-                            conversationMap.put("participantsCount", conversation.getParticipantsList().size());
-                            conversationMap.put("isGroup", conversation.getParticipantsList().size() > 2);
+                   @Override
+                   public void onSuccess(List<Message> messages) {
+                       if (!messages.isEmpty()) {
+                           Message lastMessage = messages.get(0);
+                           conversationMap.put("sid", conversationId);
+                           conversationMap.put("lastMessage", lastMessage.getBody());
+                           conversationMap.put("attributes", lastMessage.getAttributes().toString());
+                           conversationMap.put("mediaCount", lastMessage.getAttachedMedia().size());
+                           conversationMap.put("participantsCount", conversation.getParticipantsList().size());
+                           conversationMap.put("isGroup", conversation.getParticipantsList().size() > 2);
 
-                            pendingCallbacks.incrementAndGet();
-                            lastMessage.getParticipant().getAndSubscribeUser(new CallbackListener<User>() {
-                                @Override
-                                public void onSuccess(User user) {
-                                    conversationMap.put("friendlyIdentity", user.getIdentity());
-                                    conversationMap.put("friendlyName", user.getFriendlyName());
-                                    if (pendingCallbacks.decrementAndGet() == 0) {
-                                        result.success(list);
-                                    }
-                                }
-                            });
+                           Participant participant = lastMessage.getParticipant();
+                           if (participant != null) {  // Added null check here
+                               pendingCallbacks.incrementAndGet();
+                               participant.getAndSubscribeUser(new CallbackListener<User>() {
+                                   @Override
+                                   public void onSuccess(User user) {
+                                       conversationMap.put("friendlyIdentity", user.getIdentity());
+                                       conversationMap.put("friendlyName", user.getFriendlyName());
+                                       if (pendingCallbacks.decrementAndGet() == 0) {
+                                           result.success(list);
+                                       }
+                                   }
+                               });
+                           }
 
-                            if (conversation.getLastMessageDate() != null) {
-                                SimpleDateFormat inputFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
-                                SimpleDateFormat outputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
-                                outputFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-                                try {
-                                    Date date = inputFormat.parse(conversation.getLastMessageDate().toString());
-                                    String outputDateStr = outputFormat.format(date);
-                                    conversationMap.put("lastMessageDate", outputDateStr);
-                                } catch (ParseException e) {
-                                    e.printStackTrace();
-                                }
-                            }
+                           if (conversation.getLastMessageDate() != null) {
+                               SimpleDateFormat inputFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
+                               SimpleDateFormat outputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
+                               outputFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+                               try {
+                                   Date date = inputFormat.parse(conversation.getLastMessageDate().toString());
+                                   String outputDateStr = outputFormat.format(date);
+                                   conversationMap.put("lastMessageDate", outputDateStr);
+                               } catch (ParseException e) {
+                                   e.printStackTrace();
+                               }
+                           }
 
-                            list.add(conversationMap);
-                        }
-                        if (pendingCallbacks.decrementAndGet() == 0) {
-                            result.success(list);
-                        }
-                    }
+                           list.add(conversationMap);
+                       }
+                       if (pendingCallbacks.decrementAndGet() == 0) {
+                           result.success(list);
+                       }
+                   }
+
 
                     @Override
                     public void onError(ErrorInfo errorInfo) {

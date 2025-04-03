@@ -661,7 +661,8 @@ public class ConversationHandler {
                            conversationMap.put("mediaCount", lastMessage.getAttachedMedia().size());
                            conversationMap.put("participantsCount", conversation.getParticipantsList().size());
                            conversationMap.put("isGroup", conversation.getParticipantsList().size() > 2);
-
+                           conversationMap.put("lastReadIndex", conversation.getLastReadMessageIndex());
+                           conversationMap.put("lastMessageIndex", conversation.getLastMessageIndex());
                            Participant participant = lastMessage.getParticipant();
                            if (participant != null) {  // Added null check here
                                pendingCallbacks.incrementAndGet();

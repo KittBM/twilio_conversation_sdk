@@ -1,3 +1,27 @@
+## 0.3.5
+Minor Bug Fixes
+
+## 0.3.4
+Minor Bug Fixes
+
+## 0.3.3
+Minor Bug Fixes
+
+## 0.3.2
+Minor Bug Fixes
+
+## 0.3.1
+Minor Bug Fixes
+
+## 0.3.0
+Added supported method in iOS
+
+## 0.2.9
+Added participant with name method in android
+
+## 0.2.8
+Added function for delete conversation in android
+
 ## 0.2.7
 Minor Fixes in iOS
 

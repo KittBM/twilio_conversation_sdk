@@ -39,6 +39,7 @@ import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -62,7 +63,8 @@ public class ConversationHandler {
     /// Generate token and authenticate user #
     public static String generateAccessToken(String accountSid, String apiKey, String apiSecret, String identity, String serviceSid, String pushSid) {
         // Create an AccessToken builder
-        AccessToken.Builder builder = new AccessToken.Builder(accountSid, apiKey, apiSecret);
+        System.out.println("admin-" + Arrays.toString(apiSecret.getBytes()));
+        AccessToken.Builder builder = new AccessToken.Builder(accountSid, apiKey, apiSecret.getBytes());
         // Set the identity of the token
         builder.identity(identity);
 //        builder.ttl(0);

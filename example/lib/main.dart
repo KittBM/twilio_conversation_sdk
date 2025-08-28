@@ -42,9 +42,9 @@ class _ConversationState extends State<Conversation> {
   static var apiKey = '';
   static var apiSecret = '';
   static var serviceSid = ''; // Conversation Service SID
-  static var pushSid = '';
   static var identity = '';
   static var participantIdentity = '';
+  static var pushSid = '';
   String? accessToken = "";
 
   final _twilioConversationSdkPlugin = TwilioConversationSdk();

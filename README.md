@@ -24,7 +24,7 @@ A Flutter plugin for [Twilio Conversations SDK](https://www.twilio.com/docs/conv
 - Get Unread Message Count
 
 ## Example
-Check out the [example](https://github.com/ALAlliancetek/twilio_conversation_sdk)
+Check out the [example](https://github.com/ALAlliancetek/twilio_conversation_sdk/tree/main/example)
 
 ## Usage
 ### Obtain an instance

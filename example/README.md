@@ -1,16 +1,15 @@
-# twilio_conversation_sdk_example
+# twilio_conversation_sdk
 
-Demonstrates how to use the twilio_conversation_sdk plugin.
+# Introduction
 
-## Getting Started
+A Flutter plugin for [Twilio Conversations SDK](https://www.twilio.com/docs/conversations) which allows you to build engaging conversational messaging experiences for Android and iOS.
 
-This project is a starting point for a Flutter application.
+## Supported platforms
+- Android
+- iOS
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Usage
+### install
+```dart
+twilio_conversation_sdk: ^0.3.7
+```

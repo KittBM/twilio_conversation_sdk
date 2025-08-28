@@ -1,3 +1,9 @@
+## 0.3.7
+Android version compatible with Android SDK level 36
+
+## 0.3.6
+Minor Bug Fixes
+
 ## 0.3.5
 Minor Bug Fixes
 

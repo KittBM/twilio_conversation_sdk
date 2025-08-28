@@ -541,6 +541,8 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
         dictionary["mediaCount"] = message.attachedMedia.count
         dictionary["participantsCount"] = conversation.participants().count
         dictionary["isGroup"] = conversation.participants().count > 2
+        dictionary["lastReadIndex"] = conversation.lastReadMessageIndex
+        dictionary["lastMessageIndex"] = conversation.lastMessageIndex
 
         var friendlyIdentity = ""
         var friendlyName = ""

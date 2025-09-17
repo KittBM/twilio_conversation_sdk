@@ -43,6 +43,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TimeZone;
@@ -51,7 +52,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.MethodChannel;
-
 
 public class ConversationHandler {
     /// Entry point for the Conversations SDK.
@@ -194,7 +194,7 @@ public class ConversationHandler {
         });
     }
 
-    ///Join the existing conversation #
+    /// Join the existing conversation #
     public static String joinConversation(String conversationId) {
         conversationClient.getConversation(conversationId, new CallbackListener<Conversation>() {
             @Override
@@ -230,22 +230,19 @@ public class ConversationHandler {
                 jsonObject = new JSONObject(attribute);
 
                 Attributes attributes = new Attributes(jsonObject);
-                conversation.prepareMessage()
-                        .setAttributes(attributes)
-                        .setBody(enteredMessage)
-                        .buildAndSend(new CallbackListener() {
-                            @Override
-                            public void onSuccess(Object data) {
-                                System.out.println("messageMap- onSuccess");
-                                result.success("send");
-                            }
+                conversation.prepareMessage().setAttributes(attributes).setBody(enteredMessage).buildAndSend(new CallbackListener() {
+                    @Override
+                    public void onSuccess(Object data) {
+                        System.out.println("messageMap- onSuccess");
+                        result.success("send");
+                    }
 
-                            @Override
-                            public void onError(ErrorInfo errorInfo) {
-                                System.out.println("messageMap- onError");
-                                result.success(errorInfo.getMessage());
-                            }
-                        });
+                    @Override
+                    public void onError(ErrorInfo errorInfo) {
+                        System.out.println("messageMap- onError");
+                        result.success(errorInfo.getMessage());
+                    }
+                });
             }
 
             @Override
@@ -278,63 +275,54 @@ public class ConversationHandler {
                     }
                     //try (InputStream inputStream = new FileInputStream(file)) {
                     assert fileInputStream != null;
-                    conversation.prepareMessage()
-                            .setAttributes(attributes)
-                            .setBody(enteredMessage)
-                            .addMedia(fileInputStream, mimeType, fileName, new MediaUploadListener() {
-                                @Override
-                                public void onStarted() {
-                                    System.out.println("Media onStarted:");
-                                }
+                    conversation.prepareMessage().setAttributes(attributes).setBody(enteredMessage).addMedia(fileInputStream, mimeType, fileName, new MediaUploadListener() {
+                        @Override
+                        public void onStarted() {
+                            System.out.println("Media onStarted:");
+                        }
 
-                                @Override
-                                public void onProgress(long bytesSent) {
-                                    System.out.println("Media upload progress: " + bytesSent);
-                                    HashMap<String, Object> progressData = new HashMap<>();
-                                    progressData.put("bytesSent", bytesSent);
-                                    triggerEvent(progressData);
-                                }
+                        @Override
+                        public void onProgress(long bytesSent) {
+                            System.out.println("Media upload progress: " + bytesSent);
+                            HashMap<String, Object> progressData = new HashMap<>();
+                            progressData.put("bytesSent", bytesSent);
+                            triggerEvent(progressData);
+                        }
 
-                                @Override
-                                public void onCompleted(@NonNull String mediaSid) {
-                                    System.out.println("Media uploaded successfully with SID: " + mediaSid);
-                                    HashMap<String, Object> progressData = new HashMap<>();
-                                    progressData.put("mediaStatus", "Completed");
-                                    triggerEvent(progressData);
-                                }
+                        @Override
+                        public void onCompleted(@NonNull String mediaSid) {
+                            System.out.println("Media uploaded successfully with SID: " + mediaSid);
+                            HashMap<String, Object> progressData = new HashMap<>();
+                            progressData.put("mediaStatus", "Completed");
+                            triggerEvent(progressData);
+                        }
 
-                                @Override
-                                public void onFailed(@NonNull ErrorInfo errorInfo) {
-                                    // Handle media upload failure
-                                    System.err.println("Media upload failed:" + errorInfo.getMessage());
-                                    HashMap<String, Object> progressData = new HashMap<>();
-                                    progressData.put("mediaStatus", Strings.failed);
-                                    triggerEvent(progressData);
-                                }
-                            })
-                            .buildAndSend(new CallbackListener() {
-                                @Override
-                                public void onSuccess(Object data) {
-                                    // Message sent successfully
-                                    System.out.println("Message sent successfully!");
-                                    result.success("send");
-                                }
+                        @Override
+                        public void onFailed(@NonNull ErrorInfo errorInfo) {
+                            // Handle media upload failure
+                            System.err.println("Media upload failed:" + errorInfo.getMessage());
+                            HashMap<String, Object> progressData = new HashMap<>();
+                            progressData.put("mediaStatus", Strings.failed);
+                            triggerEvent(progressData);
+                        }
+                    }).buildAndSend(new CallbackListener() {
+                        @Override
+                        public void onSuccess(Object data) {
+                            // Message sent successfully
+                            System.out.println("Message sent successfully!");
+                            result.success("send");
+                        }
 
-                                @Override
-                                public void onError(ErrorInfo errorInfo) {
-                                    // Handle message send error
-                                    System.err.println("Error sending message: " + errorInfo.getMessage());
-                                    //result.success("SendMessageError", errorInfo.getMessage(), null);
-                                    HashMap<String, Object> progressData = new HashMap<>();
-                                    progressData.put("messageStatus", Strings.failed);
-                                    triggerEvent(progressData);
-                                }
-                            });
-                    /*} catch (FileNotFoundException e) {
-                        System.err.println("File not found: " + e.getMessage());
-                    } catch (IOException e) {
-                        System.err.println("IO error: " + e.getMessage());
-                    }*/
+                        @Override
+                        public void onError(ErrorInfo errorInfo) {
+                            // Handle message send error
+                            System.err.println("Error sending message: " + errorInfo.getMessage());
+                            //result.success("SendMessageError", errorInfo.getMessage(), null);
+                            HashMap<String, Object> progressData = new HashMap<>();
+                            progressData.put("messageStatus", Strings.failed);
+                            triggerEvent(progressData);
+                        }
+                    });
                 } catch (Exception e) {
                     // Handle exceptions (e.g., JSONException, FileNotFoundException)
                     System.err.println("Error preparing message: " + e.getMessage());
@@ -366,36 +354,6 @@ public class ConversationHandler {
                 result.addListener(new ConversationListener() {
                     @Override
                     public void onMessageAdded(Message message) {
-                        /*try {
-                            Map<String, Object> messageMap = new HashMap<>();
-                            messageMap.put("sid", message.getSid());
-                            messageMap.put("author", message.getAuthor());
-                            messageMap.put("body", message.getBody());
-                            messageMap.put("attributes", message.getAttributes().toString());
-                            messageMap.put("dateCreated", message.getDateCreated());
-                            System.out.println("messageMap- onMessageAdded");
-                            for (Media media : message.getAttachedMedia()) {
-                                media.getTemporaryContentUrl(new CallbackListener<String>() {
-                                    @Override
-                                    public void onSuccess(String mediaUrl) {
-                                        System.out.println("messageMap- onMessageAdded  AttachedMedia getTemporaryContentUrl: " + mediaUrl);
-                                        messageMap.put("mediaUrl", mediaUrl);
-                                    }
-                                });
-                            }
-                            triggerEvent(messageMap);
-
-                            result.setLastReadMessageIndex(result.getLastMessageIndex() + 1, new CallbackListener<Long>() {
-                                @Override
-                                public void onSuccess(Long result) {
-                                    System.out.println("LastReadMessageIndex- " + result);
-                                }
-                            });
-
-                        } catch (Exception e) {
-                            //System.out.println("Exception-"+e.getMessage());
-                        }*/
-
                         //new code for attach media check
                         try {
                             Map<String, Object> messageMap = new HashMap<>();
@@ -565,8 +523,8 @@ public class ConversationHandler {
             conversationMap.put("participantsCount", conversationList.get(i).getParticipantsList().size());
             conversationMap.put("isGroup", conversationList.get(i).getParticipantsList().size() > 2);
             if (conversationList.get(i).getLastMessageDate() != null) {
-                SimpleDateFormat inputFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
-                SimpleDateFormat outputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
+                SimpleDateFormat inputFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
+                SimpleDateFormat outputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.ENGLISH);
                 outputFormat.setTimeZone(TimeZone.getTimeZone("UTC")); // Convert to UTC
                 try {
                     Date date = inputFormat.parse(conversationList.get(i).getLastMessageDate().toString());
@@ -586,64 +544,6 @@ public class ConversationHandler {
         return list;
     }
 
-    //TODO old code before
-    /*public static void getLastMessages(String conversationId, MethodChannel.Result result) {
-        List<Map<String, Object>> list = new ArrayList<>();
-        conversationClient.getConversation(conversationId, new CallbackListener<Conversation>() {
-            @Override
-            public void onSuccess(Conversation conversation) {
-
-                Map<String, Object> conversationMap = new HashMap<>();
-                conversation.getLastMessages(1, new CallbackListener<List<Message>>() {
-                    @Override
-                    public void onSuccess(List<Message> messages) {
-
-                        if (!messages.isEmpty()) {
-                            System.out.println("Success fetching last message: " + messages.get(0).getBody());
-                            conversationMap.put("sid", conversationId);
-                            conversationMap.put("lastMessage", messages.get(0).getBody());
-                            conversationMap.put("attributes", messages.get(0).getAttributes().toString());
-                            conversationMap.put("mediaCount", messages.get(0).getAttachedMedia().size());
-                            if (conversation.getLastMessageDate() != null) {
-                                SimpleDateFormat inputFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
-                                SimpleDateFormat outputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
-                                outputFormat.setTimeZone(TimeZone.getTimeZone("UTC")); // Convert to UTC
-                                try {
-                                    Date date = inputFormat.parse(conversation.getLastMessageDate().toString());
-                                    String outputDateStr = outputFormat.format(date);
-                                    conversationMap.put("lastMessageDate", outputDateStr);
-                                    System.out.println("lastMessageDateTime->" + outputDateStr);
-                                } catch (ParseException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                            list.add(conversationMap);
-                        } else {
-                            System.out.println("Else fetching last message: ");
-                        }
-                        result.success(list);
-                    }
-
-                    @Override
-                    public void onError(ErrorInfo errorInfo) {
-                        System.out.println("Error fetching last message: " + errorInfo.getMessage());
-                        List<Map<String, Object>> list = new ArrayList<>();
-                        Map<String, Object> messagesMap = new HashMap<>();
-                        messagesMap.put("status", Strings.failed);
-                        list.add(messagesMap);
-                        result.success(list);
-                    }
-                });
-            }
-
-            @Override
-            public void onError(ErrorInfo errorInfo) {
-                System.out.println("Error fetching conversation: " + errorInfo.getMessage());
-            }
-        });
-        System.out.println("getLastMessages----->" + list);
-    }*/
-
     public static void getLastMessages(String conversationId, MethodChannel.Result result) {
         List<Map<String, Object>> list = new ArrayList<>();
         conversationClient.getConversation(conversationId, new CallbackListener<Conversation>() {
@@ -653,52 +553,52 @@ public class ConversationHandler {
                 Map<String, Object> conversationMap = new HashMap<>();
 
                 conversation.getLastMessages(1, new CallbackListener<List<Message>>() {
-                   @Override
-                   public void onSuccess(List<Message> messages) {
-                       if (!messages.isEmpty()) {
-                           Message lastMessage = messages.get(0);
-                           conversationMap.put("sid", conversationId);
-                           conversationMap.put("lastMessage", lastMessage.getBody());
-                           conversationMap.put("attributes", lastMessage.getAttributes().toString());
-                           conversationMap.put("mediaCount", lastMessage.getAttachedMedia().size());
-                           conversationMap.put("participantsCount", conversation.getParticipantsList().size());
-                           conversationMap.put("isGroup", conversation.getParticipantsList().size() > 2);
-                           conversationMap.put("lastReadIndex", conversation.getLastReadMessageIndex());
-                           conversationMap.put("lastMessageIndex", conversation.getLastMessageIndex());
-                           Participant participant = lastMessage.getParticipant();
-                           if (participant != null) {  // Added null check here
-                               pendingCallbacks.incrementAndGet();
-                               participant.getAndSubscribeUser(new CallbackListener<User>() {
-                                   @Override
-                                   public void onSuccess(User user) {
-                                       conversationMap.put("friendlyIdentity", user.getIdentity());
-                                       conversationMap.put("friendlyName", user.getFriendlyName());
-                                       if (pendingCallbacks.decrementAndGet() == 0) {
-                                           result.success(list);
-                                       }
-                                   }
-                               });
-                           }
+                    @Override
+                    public void onSuccess(List<Message> messages) {
+                        if (!messages.isEmpty()) {
+                            Message lastMessage = messages.get(0);
+                            conversationMap.put("sid", conversationId);
+                            conversationMap.put("lastMessage", lastMessage.getBody());
+                            conversationMap.put("attributes", lastMessage.getAttributes().toString());
+                            conversationMap.put("mediaCount", lastMessage.getAttachedMedia().size());
+                            conversationMap.put("participantsCount", conversation.getParticipantsList().size());
+                            conversationMap.put("isGroup", conversation.getParticipantsList().size() > 2);
+                            conversationMap.put("lastReadIndex", conversation.getLastReadMessageIndex());
+                            conversationMap.put("lastMessageIndex", conversation.getLastMessageIndex());
+                            Participant participant = lastMessage.getParticipant();
+                            if (participant != null) {  // Added null check here
+                                pendingCallbacks.incrementAndGet();
+                                participant.getAndSubscribeUser(new CallbackListener<User>() {
+                                    @Override
+                                    public void onSuccess(User user) {
+                                        conversationMap.put("friendlyIdentity", user.getIdentity());
+                                        conversationMap.put("friendlyName", user.getFriendlyName());
+                                        if (pendingCallbacks.decrementAndGet() == 0) {
+                                            result.success(list);
+                                        }
+                                    }
+                                });
+                            }
 
-                           if (conversation.getLastMessageDate() != null) {
-                               SimpleDateFormat inputFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
-                               SimpleDateFormat outputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
-                               outputFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-                               try {
-                                   Date date = inputFormat.parse(conversation.getLastMessageDate().toString());
-                                   String outputDateStr = outputFormat.format(date);
-                                   conversationMap.put("lastMessageDate", outputDateStr);
-                               } catch (ParseException e) {
-                                   e.printStackTrace();
-                               }
-                           }
+                            if (conversation.getLastMessageDate() != null) {
+                                SimpleDateFormat inputFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
+                                SimpleDateFormat outputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.ENGLISH);
+                                outputFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+                                try {
+                                    Date date = inputFormat.parse(conversation.getLastMessageDate().toString());
+                                    String outputDateStr = outputFormat.format(date);
+                                    conversationMap.put("lastMessageDate", outputDateStr);
+                                } catch (ParseException e) {
+                                    e.printStackTrace();
+                                }
+                            }
 
-                           list.add(conversationMap);
-                       }
-                       if (pendingCallbacks.decrementAndGet() == 0) {
-                           result.success(list);
-                       }
-                   }
+                            list.add(conversationMap);
+                        }
+                        if (pendingCallbacks.decrementAndGet() == 0) {
+                            result.success(list);
+                        }
+                    }
 
 
                     @Override
@@ -718,7 +618,6 @@ public class ConversationHandler {
             }
         });
     }
-
 
     public static void getUnReadMsgCount(String conversationId, MethodChannel.Result result) {
         List<Map<String, Object>> list = new ArrayList<>();
@@ -754,65 +653,6 @@ public class ConversationHandler {
     }
 
     /// Get messages from the specific conversation #
-    /*public static void getAllMessages(String conversationId, Integer messageCount, MethodChannel.Result result) {
-        List<Map<String, Object>> list = new ArrayList<>();
-        conversationClient.getConversation(conversationId, new CallbackListener<Conversation>() {
-            @Override
-            public void onSuccess(Conversation conversation) {
-                conversation.getLastMessages((messageCount != null) ? messageCount : 1000, new CallbackListener<List<Message>>() {
-                    @Override
-                    public void onSuccess(List<Message> messagesList) {
-                        for (int i = 0; i < messagesList.size(); i++) {
-                            Map<String, Object> messagesMap = new HashMap<>();
-                            messagesMap.put("sid", messagesList.get(i).getSid());
-                            messagesMap.put("author", messagesList.get(i).getAuthor());
-                            messagesMap.put("body", messagesList.get(i).getBody());
-                            messagesMap.put("attributes", messagesList.get(i).getAttributes().toString());
-                            messagesMap.put("dateCreated", messagesList.get(i).getDateCreated());
-
-                            list.add(messagesMap);
-
-                            for (Media media : messagesList.get(i).getAttachedMedia()) {
-                                System.out.println("AttachedMedia getSid: " + media.getSid());
-                                System.out.println("AttachedMedia getContentType: " + media.getContentType());
-                                System.out.println("AttachedMedia getSize: " + media.getSize());
-                                System.out.println("AttachedMedia getFilename: " + media.getFilename());
-                                System.out.println("AttachedMedia getCategory: " + media.getCategory());
-                                media.getTemporaryContentUrl(new CallbackListener<String>() {
-                                    @Override
-                                    public void onSuccess(String mediaUrl) {
-                                        System.out.println("AttachedMedia getTemporaryContentUrl: " + mediaUrl);
-                                    }
-                                });
-                            }
-                        }
-                        if (!list.isEmpty()) {
-                            conversation.setLastReadMessageIndex(conversation.getLastMessageIndex(), new CallbackListener<Long>() {
-                                @Override
-                                public void onSuccess(Long result) {
-
-                                }
-                            });
-                        }
-
-                        result.success(list);
-                    }
-
-                    @Override
-                    public void onError(ErrorInfo errorInfo) {
-                        /// Error occurred while retrieving the messages
-                        //System.out.println("Error retrieving messages: " + errorInfo.getMessage());
-                    }
-                });
-            }
-
-            @Override
-            public void onError(ErrorInfo errorInfo) {
-                CallbackListener.super.onError(errorInfo);
-            }
-        });
-    }*/
-
     public static void getAllMessages(String conversationId, Integer messageCount, MethodChannel.Result result) {
         List<Map<String, Object>> list = new ArrayList<>();
         conversationClient.getConversation(conversationId, new CallbackListener<Conversation>() {
@@ -948,7 +788,6 @@ public class ConversationHandler {
         });
     }
 
-
     public static void deleteMessage(String conversationId, int index, MethodChannel.Result result) {
         System.err.println("Index - " + index);
         conversationClient.getConversation(conversationId, new CallbackListener<Conversation>() {
@@ -993,7 +832,6 @@ public class ConversationHandler {
             }
         });
     }
-
 
     public static void initializeConversationClient(String accessToken, MethodChannel.Result result, ClientInterface clientInterface) {
         ConversationsClient.Properties props = ConversationsClient.Properties.newBuilder().createProperties();
@@ -1202,7 +1040,6 @@ public class ConversationHandler {
         participantMap.put("isAdmin", Objects.equals(participant.getConversation().getCreatedBy(), participant.getIdentity()));
         participantMap.put("attributes", participant.getAttributes().toString());
     }
-
 
     public static void updateAccessToken(String accessToken, MethodChannel.Result result) {
         Map<String, Object> tokenStatus = new HashMap<>();

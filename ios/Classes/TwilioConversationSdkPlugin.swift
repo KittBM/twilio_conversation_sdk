@@ -293,7 +293,7 @@ public class TwilioConversationSdkPlugin: NSObject, FlutterPlugin,FlutterStreamH
         case Methods.sendMessage:
             self.conversationsHandler.sendMessage(conversationId: arguments?["conversationId"] as! String, messageText: arguments?["message"] as! String, attributes: arguments?["attribute"] as! [String : Any]) { tchResult, tchMessages in
                 if (tchResult.isSuccessful){
-                    result("\(tchMessages)")
+                    result(tchMessages ?? "")
                 }else {
                     result(tchResult.resultText)
                 }

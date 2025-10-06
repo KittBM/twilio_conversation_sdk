@@ -23,5 +23,6 @@ class Methods {
     static let getUnReadMsgCount: String = "getUnReadMsgCount"
     static let sendMessageWithMedia: String = "sendMessageWithMedia"
     static let getParticipantsWithName: String = "getParticipantsWithName"
+    static let updateMessage: String = "updateMessage"
 
 }

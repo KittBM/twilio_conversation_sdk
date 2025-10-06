@@ -233,8 +233,13 @@ public class ConversationHandler {
                 conversation.prepareMessage().setAttributes(attributes).setBody(enteredMessage).buildAndSend(new CallbackListener() {
                     @Override
                     public void onSuccess(Object data) {
-                        System.out.println("messageMap- onSuccess");
-                        result.success("send");
+                        if (data instanceof Message) {
+                            Message message = (Message) data;
+                            result.success(message.getSid());
+                        } else {
+                            System.out.println("Unexpected data type: " + data.getClass());
+                            result.success("send");
+                        }
                     }
 
                     @Override
@@ -251,6 +256,51 @@ public class ConversationHandler {
             }
         });
     }
+
+    /// Update message #
+    public static void body(String enteredMessage, String conversationId, int msgIndex, HashMap attribute, MethodChannel.Result result) {
+        conversationClient.getConversation(conversationId, new CallbackListener<Conversation>() {
+            @Override
+            public void onSuccess(Conversation conversation) {
+                // Get the existing message by messageId
+                conversation.getMessageByIndex(msgIndex, new CallbackListener<Message>() {
+                    @Override
+                    public void onSuccess(Message message) {
+                        // Prepare new attributes
+                        JSONObject jsonObject = new JSONObject(attribute);
+                        Attributes attributes = new Attributes(jsonObject);
+
+                        // Update message body and attributes
+                        message.updateBody(enteredMessage, new StatusListener() {
+                            @Override
+                            public void onSuccess() {
+                                result.success("Success");
+                            }
+
+                            @Override
+                            public void onError(ErrorInfo errorInfo) {
+                                System.out.println("updateMessage- onError");
+                                result.success(errorInfo.getMessage());
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onError(ErrorInfo errorInfo) {
+                        System.out.println("getMessage- onError");
+                        result.success(errorInfo.getMessage());
+                    }
+                });
+            }
+
+            @Override
+            public void onError(ErrorInfo errorInfo) {
+                System.out.println("getConversation- onError");
+                result.success(errorInfo.getMessage());
+            }
+        });
+    }
+
 
     /// Send message #
     public static void sendMessageWithMedia(String enteredMessage, String conversationId, HashMap attribute, String mediaFilePath, String mimeType, String fileName, MethodChannel.Result result) {

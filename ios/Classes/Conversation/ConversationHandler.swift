@@ -163,7 +163,7 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
     func sendMessage(conversationId: String,
                      messageText: String,
                      attributes: [String: Any],
-                     completion: @escaping (TCHResult, TCHMessage?) -> Void) {
+                     completion: @escaping (TCHResult, String?) -> Void) {
         // Fetch the conversation using the provided ID
         self.getConversationFromId(conversationId: conversationId) { conversation in
             //            if let error = error {
@@ -181,12 +181,58 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
             conversation?.prepareMessage()
                 .setAttributes(attributesObject, error: nil)
                 .setBody(messageText).buildAndSend(completion: { tchResult, tchMessages in
-                    completion(tchResult,tchMessages)
+                   if tchResult.isSuccessful, let messageSid = tchMessages?.sid {
+                    // ✅ สำเร็จ — ส่งกลับ message SID
+                    completion(tchResult, messageSid)
+                    } else {
+                        // ❌ ล้มเหลว — ส่ง nil กลับ
+                        completion(tchResult, nil)
+                    }
                 })
 
 
         }
     }
+
+    func body(
+        conversationId: String,
+        msgIndex: UInt,
+        messageText: String,
+        attributes: [String: Any],
+        completion: @escaping (TCHResult, TCHMessage?) -> Void
+    ) {
+        self.getConversationFromId(conversationId: conversationId) { conversation in
+            guard let conversation = conversation else {
+                print("Conversation not found for id: \(conversationId)")
+                completion(TCHResult(), nil)
+                return
+            }
+
+            conversation.message(withIndex: NSNumber(value: msgIndex)) { result, message in
+                guard result.isSuccessful, let message = message else {
+                    print("Failed to get message: \(result.resultText ?? "Unknown error")")
+                    completion(result, nil)
+                    return
+                }
+
+                let attributesObject = TCHJsonAttributes(dictionary: attributes)
+
+                // ✅ updateBody callback รับแค่ TCHResult เดียว
+                message.updateBody(messageText) { updateResult in
+                    if updateResult.isSuccessful {
+                        // ✅ setAttributes callback รับแค่ TCHResult เดียวเช่นกัน
+                        message.setAttributes(attributesObject, completion: { attrResult in
+                            completion(attrResult, message)
+                        })
+                    } else {
+                        completion(updateResult, nil)
+                    }
+                }
+            }
+        }
+    }
+
+
 
     func sendMessageWithMedia(conversationId: String,
                               messageText: String,
@@ -464,7 +510,7 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
         var dictionary: [String: Any] = [:]
         var attachedMedia: [[String: Any]] = []
 
-        dictionary["sid"] = message.participantSid
+        dictionary["sid"] = message.sid
         dictionary["author"] = message.author
         dictionary["body"] = message.body
 
@@ -480,7 +526,7 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
         }
 
 
-        dictionary["lastMessageDate"] = formatLastMessageDateISO8601(lastMessageDateString: message.dateUpdated?.description ?? "")
+        // dictionary["lastMessageDate"] = formatLastMessageDateISO8601(lastMessageDateString: message.dateUpdated?.description ?? "")
         dictionary["dateCreated"] = message.dateCreated?.description ?? ""
         dictionary["lastMessage"] = message.body
 

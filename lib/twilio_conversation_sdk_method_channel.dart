@@ -121,6 +121,23 @@ class MethodChannelTwilioConversationSdk extends TwilioConversationSdkPlatform {
     return result ?? "";
   }
 
+  /// Update message #
+  @override
+  Future<String?> updateMessage(
+      {required String conversationId,
+      required int index,
+      required String message,
+      dynamic attribute}) async {
+    final String? result =
+        await methodChannel.invokeMethod<String>('updateMessage', {
+      "conversationId": conversationId,
+      "msgIndex": index,
+      "message": message,
+      "attribute": attribute
+    });
+    return result ?? "";
+  }
+
   /// Send message with media #
   @override
   Future<String?> sendMessageWithMedia(
@@ -172,9 +189,10 @@ class MethodChannelTwilioConversationSdk extends TwilioConversationSdkPlatform {
 
   /// Get participants with name from the specific conversation #
   @override
-  Future<List?> getParticipantsWithName({required String conversationId}) async {
-    final List? participantsList = await methodChannel
-        .invokeMethod('getParticipantsWithName', {"conversationId": conversationId});
+  Future<List?> getParticipantsWithName(
+      {required String conversationId}) async {
+    final List? participantsList = await methodChannel.invokeMethod(
+        'getParticipantsWithName', {"conversationId": conversationId});
     return participantsList ?? [];
   }
 
@@ -237,8 +255,7 @@ class MethodChannelTwilioConversationSdk extends TwilioConversationSdkPlatform {
   Future<String?> deleteMessage(
       {required String conversationId, required int index}) async {
     final result = await methodChannel.invokeMethod<String>(
-        'deleteMessage',
-        {"conversationId": conversationId, "index": index});
+        'deleteMessage', {"conversationId": conversationId, "index": index});
     return result;
   }
 }

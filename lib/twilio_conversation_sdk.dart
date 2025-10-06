@@ -179,6 +179,27 @@ class TwilioConversationSdk {
         conversationId: conversationId, message: message, attribute: attribute);
   }
 
+  /// Update a message in a conversation.
+  ///
+  /// This method sends a message in the specified conversation.
+  ///
+  /// - [message]: The message content to send.
+  /// - [conversationId]: The ID of the conversation in which to send the message.
+  /// - [index]: The ID of the message.
+  ///
+  /// Returns a [String] indicating the result of the operation, or `null` if it fails.
+  Future<String?> updateMessage(
+      {required message,
+      required conversationId,
+      required index,
+      required attribute}) {
+    return TwilioConversationSdkPlatform.instance.updateMessage(
+        conversationId: conversationId,
+        index: index,
+        message: message,
+        attribute: attribute);
+  }
+
   /// Sends a message with media in a conversation.
   ///
   /// This method sends a message in the specified conversation.

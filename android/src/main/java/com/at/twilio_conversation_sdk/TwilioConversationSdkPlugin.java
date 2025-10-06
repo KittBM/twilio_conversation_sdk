@@ -113,6 +113,9 @@ public class TwilioConversationSdkPlugin implements FlutterPlugin, MethodCallHan
             case Methods.sendMessage:
                 ConversationHandler.sendMessages(call.argument("message"), call.argument("conversationId"), call.argument("attribute"), result);
                 break;
+            case Methods.updateMessage:
+                ConversationHandler.body(call.argument("message"), call.argument("conversationId"), call.argument("msgIndex"), call.argument("attribute"), result);
+                break;
             // Send message with media #
             case Methods.sendMessageWithMedia:
                 ConversationHandler.sendMessageWithMedia(

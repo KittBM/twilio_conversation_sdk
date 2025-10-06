@@ -268,7 +268,6 @@ public class TwilioConversationSdkPlugin: NSObject, FlutterPlugin,FlutterStreamH
                 self.conversationsHandler.conversationId = arguments?["conversationId"] as? String
                 if let conversationFromId = conversation {
                     self.conversationsHandler.loadPreviousMessages(conversationFromId,arguments?["messageCount"] as? UInt) { listOfMessages in
-                        //                      print("listOfMessagess->\(String(describing: listOfMessages))")
                         result(listOfMessages)
                     }
                 }
@@ -294,7 +293,16 @@ public class TwilioConversationSdkPlugin: NSObject, FlutterPlugin,FlutterStreamH
         case Methods.sendMessage:
             self.conversationsHandler.sendMessage(conversationId: arguments?["conversationId"] as! String, messageText: arguments?["message"] as! String, attributes: arguments?["attribute"] as! [String : Any]) { tchResult, tchMessages in
                 if (tchResult.isSuccessful){
-                    result("send")
+                    result("\(tchMessages)")
+                }else {
+                    result(tchResult.resultText)
+                }
+            }
+            break
+        case Methods.updateMessage:
+            self.conversationsHandler.body(conversationId: arguments?["conversationId"] as! String, msgIndex: arguments?["msgIndex"] as! UInt, messageText: arguments?["message"] as! String, attributes: arguments?["attribute"] as! [String : Any]) { tchResult, tchMessages in
+                if (tchResult.isSuccessful){
+                    result("success")
                 }else {
                     result(tchResult.resultText)
                 }

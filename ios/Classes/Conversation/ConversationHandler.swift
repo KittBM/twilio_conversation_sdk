@@ -196,7 +196,7 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
 
     func body(
         conversationId: String,
-        msgIndex: UInt,
+        msgId: String,
         messageText: String,
         attributes: [String: Any],
         completion: @escaping (TCHResult, TCHMessage?) -> Void
@@ -208,21 +208,29 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
                 return
             }
 
-            conversation.message(withIndex: NSNumber(value: msgIndex)) { result, message in
-                guard result.isSuccessful, let message = message else {
-                    print("Failed to get message: \(result.resultText ?? "Unknown error")")
+            // ✅ ดึง messages ล่าสุด (จำนวนมากพอ เช่น 200)
+            conversation.getLastMessages(withCount: 1000) { result, messages in
+                guard result.isSuccessful, let messages = messages as? [TCHMessage] else {
+                    print("Failed to load messages: \(result.resultText ?? "Unknown error")")
+                    completion(result, nil)
+                    return
+                }
+
+                // ✅ หา message ที่มี sid ตรงกัน
+                guard let targetMessage = messages.first(where: { $0.sid == msgId }) else {
+                    print("Message not found for sid: \(msgId)")
                     completion(result, nil)
                     return
                 }
 
                 let attributesObject = TCHJsonAttributes(dictionary: attributes)
 
-                // ✅ updateBody callback รับแค่ TCHResult เดียว
-                message.updateBody(messageText) { updateResult in
+                // ✅ อัปเดตข้อความ
+                targetMessage.updateBody(messageText) { updateResult in
                     if updateResult.isSuccessful {
-                        // ✅ setAttributes callback รับแค่ TCHResult เดียวเช่นกัน
-                        message.setAttributes(attributesObject, completion: { attrResult in
-                            completion(attrResult, message)
+                        // ✅ อัปเดต attributes ต่อ
+                        targetMessage.setAttributes(attributesObject, completion: { attrResult in
+                            completion(attrResult, targetMessage)
                         })
                     } else {
                         completion(updateResult, nil)
@@ -231,7 +239,6 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
             }
         }
     }
-
 
 
     func sendMessageWithMedia(conversationId: String,

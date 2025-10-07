@@ -78,7 +78,7 @@ abstract class TwilioConversationSdkPlatform extends PlatformInterface {
   }
 
   Future<String?> updateMessage({required String conversationId,
-    required int index,
+    required String msgId,
     required String message,
     required dynamic attribute}) {
     throw UnimplementedError('platformVersion() has not been implemented.');

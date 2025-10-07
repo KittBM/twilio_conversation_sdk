@@ -300,7 +300,7 @@ public class TwilioConversationSdkPlugin: NSObject, FlutterPlugin,FlutterStreamH
             }
             break
         case Methods.updateMessage:
-            self.conversationsHandler.body(conversationId: arguments?["conversationId"] as! String, msgIndex: arguments?["msgIndex"] as! UInt, messageText: arguments?["message"] as! String, attributes: arguments?["attribute"] as! [String : Any]) { tchResult, tchMessages in
+            self.conversationsHandler.body(conversationId: arguments?["conversationId"] as! String, msgId: arguments?["msgId"] as! String, messageText: arguments?["message"] as! String, attributes: arguments?["attribute"] as! [String : Any]) { tchResult, tchMessages in
                 if (tchResult.isSuccessful){
                     result("success")
                 }else {

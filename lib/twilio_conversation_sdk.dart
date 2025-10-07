@@ -185,17 +185,17 @@ class TwilioConversationSdk {
   ///
   /// - [message]: The message content to send.
   /// - [conversationId]: The ID of the conversation in which to send the message.
-  /// - [index]: The ID of the message.
+  /// - [msgId]: The ID of the message.
   ///
   /// Returns a [String] indicating the result of the operation, or `null` if it fails.
   Future<String?> updateMessage(
       {required message,
       required conversationId,
-      required index,
+      required msgId,
       required attribute}) {
     return TwilioConversationSdkPlatform.instance.updateMessage(
         conversationId: conversationId,
-        index: index,
+        msgId: msgId,
         message: message,
         attribute: attribute);
   }

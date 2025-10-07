@@ -125,13 +125,13 @@ class MethodChannelTwilioConversationSdk extends TwilioConversationSdkPlatform {
   @override
   Future<String?> updateMessage(
       {required String conversationId,
-      required int index,
+      required String msgId,
       required String message,
       dynamic attribute}) async {
     final String? result =
         await methodChannel.invokeMethod<String>('updateMessage', {
       "conversationId": conversationId,
-      "msgIndex": index,
+      "msgId": msgId,
       "message": message,
       "attribute": attribute
     });

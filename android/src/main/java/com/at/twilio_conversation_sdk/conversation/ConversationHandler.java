@@ -258,49 +258,72 @@ public class ConversationHandler {
     }
 
     /// Update message #
-    public static void body(String enteredMessage, String conversationId, int msgIndex, HashMap attribute, MethodChannel.Result result) {
+    public static void body(String enteredMessage, String conversationId, String msgId, HashMap attribute, MethodChannel.Result result) {
         conversationClient.getConversation(conversationId, new CallbackListener<Conversation>() {
             @Override
             public void onSuccess(Conversation conversation) {
-                // Get the existing message by messageId
-                conversation.getMessageByIndex(msgIndex, new CallbackListener<Message>() {
+
+                // ✅ ดึงข้อความล่าสุดทั้งหมดใน conversation
+                conversation.getLastMessages(1000, new CallbackListener<List<Message>>() {
                     @Override
-                    public void onSuccess(Message message) {
-                        // Prepare new attributes
-                        JSONObject jsonObject = new JSONObject(attribute);
-                        Attributes attributes = new Attributes(jsonObject);
+                    public void onSuccess(List<Message> messages) {
+                        Message foundMessage = null;
 
-                        // Update message body and attributes
-                        message.updateBody(enteredMessage, new StatusListener() {
-                            @Override
-                            public void onSuccess() {
-                                result.success("Success");
+                        // 🔍 หา message ที่มี sid ตรงกับ messageId
+                        for (Message msg : messages) {
+                            if (msg.getSid().equals(msgId)) {
+                                foundMessage = msg;
+                                break;
                             }
+                        }
 
-                            @Override
-                            public void onError(ErrorInfo errorInfo) {
-                                System.out.println("updateMessage- onError");
-                                result.success(errorInfo.getMessage());
-                            }
-                        });
+                        if (foundMessage != null) {
+                            final Message targetMessage = foundMessage;
+                            JSONObject jsonObject = new JSONObject(attribute);
+                            final Attributes finalAttributes = new Attributes(jsonObject); // ✅ ต้องเป็น final
+
+                            // ✅ อัปเดต body ก่อน
+                            targetMessage.updateBody(enteredMessage, new StatusListener() {
+                                @Override
+                                public void onSuccess() {
+                                    // ✅ จากนั้นอัปเดต attributes ต่อ
+                                    targetMessage.setAttributes(finalAttributes, new StatusListener() {
+                                        @Override
+                                        public void onSuccess() {
+                                            result.success("Success");
+                                        }
+
+                                        @Override
+                                        public void onError(ErrorInfo errorInfo) {
+                                            result.success("setAttributes error: " + errorInfo.getMessage());
+                                        }
+                                    });
+                                }
+
+                                @Override
+                                public void onError(ErrorInfo errorInfo) {
+                                    result.success("updateBody error: " + errorInfo.getMessage());
+                                }
+                            });
+                        } else {
+                            // ❌ ถ้าไม่เจอ messageId ที่ระบุ
+                            result.success("Message not found for ID: " + msgId);
+                        }
                     }
 
                     @Override
                     public void onError(ErrorInfo errorInfo) {
-                        System.out.println("getMessage- onError");
-                        result.success(errorInfo.getMessage());
+                        result.success("getLastMessages error: " + errorInfo.getMessage());
                     }
                 });
             }
 
             @Override
             public void onError(ErrorInfo errorInfo) {
-                System.out.println("getConversation- onError");
-                result.success(errorInfo.getMessage());
+                result.success("getConversation error: " + errorInfo.getMessage());
             }
         });
     }
-
 
     /// Send message #
     public static void sendMessageWithMedia(String enteredMessage, String conversationId, HashMap attribute, String mediaFilePath, String mimeType, String fileName, MethodChannel.Result result) {

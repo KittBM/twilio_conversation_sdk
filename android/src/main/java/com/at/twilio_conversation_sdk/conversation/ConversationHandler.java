@@ -508,8 +508,84 @@ public class ConversationHandler {
 
                     @Override
                     public void onMessageUpdated(Message message, Message.UpdateReason reason) {
-                        //System.out.println("onMessageUpdated->"+message.toString());
-                        //System.out.println("reason->"+reason.toString());
+                        System.out.println("onMessageUpdated->"+message.toString());
+                        System.out.println("reason->"+reason.toString());
+                        try {
+                            Map<String, Object> messageMap = new HashMap<>();
+                            messageMap.put("sid", message.getSid());
+                            messageMap.put("author", message.getAuthor());
+                            messageMap.put("body", message.getBody());
+                            messageMap.put("attributes", message.getAttributes().toString());
+                            messageMap.put("dateCreated", message.getDateCreated());
+
+                            List<Map<String, Object>> mediaList = new ArrayList<>();
+                            int[] pendingMediaCount = {0}; // Counter to track pending URL fetches
+
+                            for (Media media : message.getAttachedMedia()) {
+                                Map<String, Object> mediaMap = new HashMap<>();
+                                mediaMap.put("sid", media.getSid());
+                                mediaMap.put("contentType", media.getContentType());
+                                mediaMap.put("filename", media.getFilename());
+
+                                // Increment pending media count
+                                synchronized (pendingMediaCount) {
+                                    pendingMediaCount[0]++;
+                                }
+
+                                media.getTemporaryContentUrl(new CallbackListener<String>() {
+                                    @Override
+                                    public void onSuccess(String mediaUrl) {
+                                        mediaMap.put("mediaUrl", mediaUrl);
+                                        mediaList.add(mediaMap);
+
+                                        // Decrement pending media count and check completion
+                                        synchronized (pendingMediaCount) {
+                                            pendingMediaCount[0]--;
+                                            if (pendingMediaCount[0] == 0) {
+                                                messageMap.put("attachMedia", mediaList);
+                                                triggerEvent(messageMap); // Trigger event when all URLs are fetched
+                                            }
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onError(ErrorInfo errorInfo) {
+                                        System.err.println("Error retrieving media URL: " + errorInfo.getMessage());
+
+                                        // Decrement pending media count and check completion
+                                        synchronized (pendingMediaCount) {
+                                            pendingMediaCount[0]--;
+                                            if (pendingMediaCount[0] == 0) {
+                                                messageMap.put("attachMedia", mediaList);
+                                                triggerEvent(messageMap); // Trigger event even if there are errors
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+
+                            // If no media to fetch, trigger the event immediately
+                            synchronized (pendingMediaCount) {
+                                if (pendingMediaCount[0] == 0) {
+                                    messageMap.put("attachMedia", mediaList);
+                                    triggerEvent(messageMap);
+                                }
+                            }
+
+                            // Update the last read message index
+                            result.setLastReadMessageIndex(result.getLastMessageIndex() + 1, new CallbackListener<Long>() {
+                                @Override
+                                public void onSuccess(Long result) {
+                                    System.out.println("LastReadMessageIndex- " + result);
+                                }
+                            });
+
+                        } catch (Exception e) {
+                            System.err.println("Exception: " + e.getMessage());
+                            HashMap<String, Object> progressData = new HashMap<>();
+                            progressData.put("messageStatus", Strings.failed);
+                            triggerEvent(progressData);
+                        }
                     }
 
                     @Override
@@ -533,12 +609,21 @@ public class ConversationHandler {
                     @Override
                     public void onTypingStarted(Conversation conversation, Participant participant) {
                         System.out.println("onTypingStarted->" + participant.getIdentity());
+                        Map<String, Object> typingMap = new HashMap<>();
+                        typingMap.put("typingStatus", true);
+                        typingMap.put("identity", participant.getIdentity());
+                        typingMap.put("conversationSid", conversation.getSid());
+                        triggerEvent(typingMap);
                     }
 
                     @Override
                     public void onTypingEnded(Conversation conversation, Participant participant) {
                         System.out.println("onTypingEnded->" + participant.getIdentity());
-
+                        Map<String, Object> typingMap = new HashMap<>();
+                        typingMap.put("typingStatus", false);
+                        typingMap.put("identity", participant.getIdentity());
+                        typingMap.put("conversationSid", conversation.getSid());
+                        triggerEvent(typingMap);
                     }
 
                     @Override
@@ -560,6 +645,33 @@ public class ConversationHandler {
             }
         });
     }
+
+    public static void setTypingStatus(String conversationId, boolean isTyping, MethodChannel.Result result) {
+        conversationClient.getConversation(conversationId, new CallbackListener<Conversation>() {
+            @Override
+            public void onSuccess(Conversation conversation) {
+                if (isTyping) {
+                    // ✅ เริ่มพิมพ์
+                    conversation.typing();
+                    System.out.println("Typing started for conversationId: " + conversationId);
+                    result.success("started");
+                } else {
+                    // ✅ หยุดพิมพ์ (Twilio จะหมดอายุ typing เองภายใน ~5 วินาที)
+                    // ที่นี่เราเพียงส่ง signal log หรือ event เฉย ๆ
+                    System.out.println("Typing ended for conversationId: " + conversationId);
+                    result.success("ended");
+                }
+            }
+
+            @Override
+            public void onError(ErrorInfo errorInfo) {
+                System.out.println("setTypingStatus error: " + errorInfo.getMessage());
+                result.success("setTypingStatus error: " + errorInfo.getMessage());
+            }
+        });
+    }
+
+
 
     /// Unsubscribe To Message Update #
     public static void unSubscribeToMessageUpdate(String conversationId) {

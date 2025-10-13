@@ -298,6 +298,7 @@ class TwilioConversationSdk {
     _messageEventChannel
         .receiveBroadcastStream(conversationSid)
         .listen((dynamic message) {
+      print(message);
       if (message != null) {
         if (message["author"] != null && message["body"] != null) {
           _messageUpdateController.add(message);
@@ -314,6 +315,15 @@ class TwilioConversationSdk {
         if (message["bytesSent"] != null) {
           _messageUpdateController.add(message);
         }
+        if (message["identity"] != null) {
+          _messageUpdateController.add(message);
+        }
+        if (message["typingStatus"] != null) {
+          _messageUpdateController.add(message);
+        }
+        if (message["conversationSid"] != null) {
+          _messageUpdateController.add(message);
+        }
       }
     });
     /*_syncEventChannel
@@ -325,6 +335,12 @@ class TwilioConversationSdk {
         }
       }
     });*/
+  }
+
+  Future<String?> setTypingStatus(
+      {required String conversationId, required bool isTyping}) async {
+    return TwilioConversationSdkPlatform.instance
+        .setTypingStatus(conversationId: conversationId, isTyping: isTyping);
   }
 
   /// Unsubscribes from message update events for a specific conversation.

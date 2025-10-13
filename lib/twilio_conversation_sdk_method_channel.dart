@@ -258,4 +258,12 @@ class MethodChannelTwilioConversationSdk extends TwilioConversationSdkPlatform {
         'deleteMessage', {"conversationId": conversationId, "index": index});
     return result;
   }
+
+  @override
+  Future<String?> setTypingStatus(
+      {required String conversationId, required bool isTyping}) async {
+    final result = await methodChannel.invokeMethod<String>('setTypingStatus',
+        {"conversationId": conversationId, "isTyping": isTyping});
+    return result;
+  }
 }

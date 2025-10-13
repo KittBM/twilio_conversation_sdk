@@ -25,4 +25,5 @@ public class Methods {
     public final static String deleteConversation = "deleteConversation";
     public final static String deleteMessage = "deleteMessage";
     public final static String updateMessage = "updateMessage";
+    public final static String setTypingStatus = "setTypingStatus";
 }

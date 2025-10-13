@@ -160,6 +160,9 @@ public class TwilioConversationSdkPlugin implements FlutterPlugin, MethodCallHan
             case Methods.deleteMessage:
                 ConversationHandler.deleteMessage(call.argument("conversationId"), call.argument("index"), result);
                 break;
+            case Methods.setTypingStatus:
+                ConversationHandler.setTypingStatus(call.argument("conversationId"), call.argument("isTyping"), result);
+                break;
             default:
                 break;
         }

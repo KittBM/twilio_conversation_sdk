@@ -22,7 +22,7 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
     //    MARK: raw
     func conversationsClient(_ client: TwilioConversationsClient, conversation: TCHConversation,
                              messageAdded message: TCHMessage) {
-
+                      
         var attachedMedia: [[String: Any]] = []
         guard client.synchronizationStatus == .completed else {
             return
@@ -71,6 +71,99 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
 
             }
         }
+    }
+
+    // MARK: - Message Updated Listener
+    // func conversationsClient(_ client: TwilioConversationsClient, conversation: TCHConversation,
+    //                          messageUpdated message: TCHMessage) {
+
+    //     print("onMessageUpdated -> \(message)")
+
+    //     var attachedMedia: [[String: Any]] = []
+    //     guard client.synchronizationStatus == .completed else {
+    //         return
+    //     }
+
+    //     self.getMessageInDictionary(message) { [self] messageDictionary in
+    //         if let messageDict = messageDictionary {
+    //             var updatedMessage: [String: Any] = [:]
+    //             updatedMessage["conversationId"] = conversation.sid ?? ""
+    //             updatedMessage["message"] = messageDict
+
+    //             // ดึง media ถ้ามี
+    //             for media in message.getMedia(by: Set([MediaCategory.media])) {
+    //                 var mediaMap: [String: Any] = [:]
+
+    //                 mediaMap["sid"] = media.sid
+    //                 mediaMap["contentType"] = media.contentType
+    //                 mediaMap["filename"] = media.filename
+
+    //                 media.getTemporaryContentUrl { result, tempUrl in
+    //                     mediaMap["mediaUrl"] = tempUrl?.absoluteString ?? ""
+    //                     print("TempURL >>> \(tempUrl?.absoluteString ?? "")")
+    //                 }
+    //                 attachedMedia.append(mediaMap)
+    //             }
+
+    //             if !attachedMedia.isEmpty {
+    //                 updatedMessage["attachMedia"] = attachedMedia
+    //             }
+
+    //             // Update last read index if subscribed
+    //             if (isSubscribe ?? false && conversationId == conversation.sid) {
+    //                 let computedIndex: NSNumber = {
+    //                     if let lastMessageIndex = conversation.lastMessageIndex {
+    //                         return NSNumber(value: lastMessageIndex.intValue + 1)
+    //                     } else {
+    //                         return 1
+    //                     }
+    //                 }()
+
+    //                 conversation.setLastReadMessageIndex(computedIndex) { result, index in
+    //                     print("setLastReadMessageIndex \(result.description)")
+    //                 }
+    //             }
+
+    //             // ส่ง event กลับไปยัง Flutter
+    //             self.messageDelegate?.onMessageUpdate(message: updatedMessage, messageSubscriptionId: self.messageSubscriptionId)
+    //         }
+    //     }
+    // }
+
+    // MARK: - Typing Started Listener
+    func conversationsClient(_ client: TwilioConversationsClient,
+                             typingStartedOn conversation: TCHConversation,
+                             participant: TCHParticipant) {
+        print("onTypingStarted -> participant: \(participant.identity ?? "unknown"), conversation: \(conversation.sid ?? "unknown")")
+
+        guard client.synchronizationStatus == .completed else {
+            return
+        }
+
+        var typingMap: [String: Any] = [:]
+        typingMap["typingStatus"] = true
+        typingMap["identity"] = participant.identity ?? ""
+        typingMap["conversationSid"] = conversation.sid ?? ""
+
+        self.messageDelegate?.onMessageUpdate(message: typingMap, messageSubscriptionId: self.messageSubscriptionId)
+    }
+
+    // MARK: - Typing Ended Listener
+    func conversationsClient(_ client: TwilioConversationsClient,
+                             typingEndedOn conversation: TCHConversation,
+                             participant: TCHParticipant) {
+        print("onTypingEnded -> participant: \(participant.identity ?? "unknown"), conversation: \(conversation.sid ?? "unknown")")
+
+        guard client.synchronizationStatus == .completed else {
+            return
+        }
+
+        var typingMap: [String: Any] = [:]
+        typingMap["typingStatus"] = false
+        typingMap["identity"] = participant.identity ?? ""
+        typingMap["conversationSid"] = conversation.sid ?? ""
+
+        self.messageDelegate?.onMessageUpdate(message: typingMap, messageSubscriptionId: self.messageSubscriptionId)
     }
 
     func registerFCMToken(token: String,completion: @escaping (_ success : Bool) -> Void){
@@ -236,6 +329,133 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
                         completion(updateResult, nil)
                     }
                 }
+            }
+        }
+    }
+
+    // MARK: - Update Multiple Messages
+    func updateMessages(
+        conversationId: String,
+        messages: [[String: Any]],
+        completion: @escaping ([String: Any]) -> Void
+    ) {
+        guard !messages.isEmpty else {
+            let responseMap: [String: Any] = [
+                "success": [],
+                "errors": [],
+                "totalSuccess": 0,
+                "totalErrors": 0
+            ]
+            completion(responseMap)
+            return
+        }
+
+        self.getConversationFromId(conversationId: conversationId) { conversation in
+            guard let conversation = conversation else {
+                let errorResponse: [String: Any] = [
+                    "error": "Conversation not found for id: \(conversationId)"
+                ]
+                completion(errorResponse)
+                return
+            }
+
+            // ✅ ดึงข้อความล่าสุดทั้งหมด
+            conversation.getLastMessages(withCount: 1000) { result, messagesList in
+                guard result.isSuccessful, let messagesList = messagesList as? [TCHMessage] else {
+                    let errorResponse: [String: Any] = [
+                        "error": "Failed to load messages: \(result.resultText ?? "Unknown error")"
+                    ]
+                    completion(errorResponse)
+                    return
+                }
+
+                var successList: [String] = []
+                var errorList: [String] = []
+                let dispatchGroup = DispatchGroup()
+
+                // วนลูปผ่านแต่ละ message ที่ต้องการอัปเดต
+                for messageData in messages {
+                    guard let msgId = messageData["msgId"] as? String,
+                          let newBody = messageData["message"] as? String else {
+                        errorList.append("Invalid data: msgId or message is null")
+                        continue
+                    }
+
+                    // 🔍 หา message ที่มี sid ตรงกับ msgId
+                    guard let targetMessage = messagesList.first(where: { $0.sid == msgId }) else {
+                        errorList.append("\(msgId): Message not found")
+                        continue
+                    }
+
+                    dispatchGroup.enter()
+
+                    // สร้าง attributes (ถ้ามี)
+                    var attributesObject: TCHJsonAttributes?
+                    if let newAttribute = messageData["attribute"] as? [String: Any] {
+                        attributesObject = TCHJsonAttributes(dictionary: newAttribute)
+                    }
+
+                    // ✅ อัปเดต body ก่อน
+                    targetMessage.updateBody(newBody) { updateResult in
+                        if updateResult.isSuccessful {
+                            // ✅ จากนั้นอัปเดต attributes ต่อ (ถ้ามี)
+                            if let attributes = attributesObject {
+                                targetMessage.setAttributes(attributes) { attrResult in
+                                    if attrResult.isSuccessful {
+                                        successList.append(msgId)
+                                    } else {
+                                        errorList.append("\(msgId): setAttributes error - \(attrResult.resultText ?? "Unknown error")")
+                                    }
+                                    dispatchGroup.leave()
+                                }
+                            } else {
+                                // ไม่มี attributes ให้ update, ถือว่าสำเร็จ
+                                successList.append(msgId)
+                                dispatchGroup.leave()
+                            }
+                        } else {
+                            errorList.append("\(msgId): updateBody error - \(updateResult.resultText ?? "Unknown error")")
+                            dispatchGroup.leave()
+                        }
+                    }
+                }
+
+                // รอให้ทุก message อัปเดตเสร็จ
+                dispatchGroup.notify(queue: .main) {
+                    let responseMap: [String: Any] = [
+                        "success": successList,
+                        "errors": errorList,
+                        "totalSuccess": successList.count,
+                        "totalErrors": errorList.count
+                    ]
+                    completion(responseMap)
+                }
+            }
+        }
+    }
+
+    // MARK: - Set Typing Status
+    func setTypingStatus(
+        conversationId: String,
+        isTyping: Bool,
+        completion: @escaping (String) -> Void
+    ) {
+        self.getConversationFromId(conversationId: conversationId) { conversation in
+            guard let conversation = conversation else {
+                print("Conversation not found for id: \(conversationId)")
+                completion("Conversation not found")
+                return
+            }
+
+            if isTyping {
+                // ✅ เริ่มพิมพ์
+                conversation.typing()
+                print("Typing started for conversationId: \(conversationId)")
+                completion("started")
+            } else {
+                // ✅ หยุดพิมพ์ (Twilio จะหมดอายุ typing เองภายใน ~5 วินาที)
+                print("Typing ended for conversationId: \(conversationId)")
+                completion("ended")
             }
         }
     }
@@ -431,7 +651,11 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
                         listOfMessagess.append(messageDict)
                     }
                     index += 1 // Increment the index
-                    processNextMessage() // Process the next message
+
+                    // Dispatch recursively to avoid stack overflow
+                    DispatchQueue.main.async {
+                        processNextMessage() // Process the next message
+                    }
                 }
             } else {
                 // All messages have been processed
@@ -459,7 +683,11 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
                         listOfMessagess.append(messageDict)
                     }
                     index += 1 // Increment the index
-                    processNextMessage() // Process the next message
+
+                    // Dispatch recursively to avoid stack overflow
+                    DispatchQueue.main.async {
+                        processNextMessage() // Process the next message
+                    }
                 }
             } else {
                 // All messages have been processed

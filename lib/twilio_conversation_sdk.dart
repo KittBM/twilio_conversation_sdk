@@ -200,6 +200,44 @@ class TwilioConversationSdk {
         attribute: attribute);
   }
 
+  /// Update multiple messages in a conversation.
+  ///
+  /// This method updates multiple messages in the specified conversation.
+  ///
+  /// - [conversationId]: The ID of the conversation containing the messages.
+  /// - [messages]: List of messages to update, each containing msgId, message, and attribute.
+  ///
+  /// Example:
+  /// ```dart
+  /// final result = await twilioConversationSdk.updateMessages(
+  ///   conversationId: 'CH...',
+  ///   messages: [
+  ///     {
+  ///       'msgId': 'IM123...',
+  ///       'message': 'Updated text 1',
+  ///       'attribute': {'edited': true}
+  ///     },
+  ///     {
+  ///       'msgId': 'IM456...',
+  ///       'message': 'Updated text 2',
+  ///       'attribute': {'edited': true}
+  ///     }
+  ///   ]
+  /// );
+  /// ```
+  ///
+  /// Returns a [Map] containing:
+  /// - success: List of successfully updated message IDs
+  /// - errors: List of error messages for failed updates
+  /// - totalSuccess: Total number of successful updates
+  /// - totalErrors: Total number of failed updates
+  Future<Map?> updateMessages(
+      {required String conversationId,
+      required List<Map<String, dynamic>> messages}) {
+    return TwilioConversationSdkPlatform.instance.updateMessages(
+        conversationId: conversationId, messages: messages);
+  }
+
   /// Sends a message with media in a conversation.
   ///
   /// This method sends a message in the specified conversation.
@@ -298,7 +336,6 @@ class TwilioConversationSdk {
     _messageEventChannel
         .receiveBroadcastStream(conversationSid)
         .listen((dynamic message) {
-      print(message);
       if (message != null) {
         if (message["author"] != null && message["body"] != null) {
           _messageUpdateController.add(message);

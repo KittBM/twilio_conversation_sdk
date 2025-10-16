@@ -308,6 +308,16 @@ public class TwilioConversationSdkPlugin: NSObject, FlutterPlugin,FlutterStreamH
                 }
             }
             break
+        case Methods.updateMessages:
+            self.conversationsHandler.updateMessages(conversationId: arguments?["conversationId"] as! String, messages: arguments?["messages"] as! [[String: Any]]) { responseMap in
+                result(responseMap)
+            }
+            break
+        case Methods.setTypingStatus:
+            self.conversationsHandler.setTypingStatus(conversationId: arguments?["conversationId"] as! String, isTyping: arguments?["isTyping"] as! Bool) { status in
+                result(status)
+            }
+            break
         case Methods.sendMessageWithMedia:
             self.conversationsHandler.sendMessageWithMedia(conversationId: arguments?["conversationId"] as! String, messageText: arguments?["message"] as! String, attributes: arguments?["attribute"] as! [String : Any], mediaFilePath: arguments?["mediaFilePath"] as! String, mimeType: arguments?["mimeType"] as! String, fileName: arguments?["fileName"] as! String ){ tchResult, tchMessages in
                 if (tchResult.isSuccessful){
@@ -372,11 +382,29 @@ extension TwilioConversationSdkPlugin : MessageDelegate {
     }
 
     func onMessageUpdate(message: [String : Any], messageSubscriptionId: String) {
-        if let conversationId = message["conversationId"] as? String,let message = message["message"] as? [String:Any] {
-            if (messageSubscriptionId == conversationId) {
+        // ✅ Check if this is a typing event
+        if let typingStatus = message["typingStatus"], let conversationSid = message["conversationSid"] as? String {
+            if (messageSubscriptionId == conversationSid) {
+                print("📤 Forwarding typing event to Flutter: \(message)")
                 self.eventSink?(message)
+            } else {
+                print("⚠️ Typing event conversationSid mismatch: subscribed=\(messageSubscriptionId), received=\(conversationSid)")
             }
+            return
         }
+
+        // ✅ Check if this is a message event
+        if let conversationId = message["conversationId"] as? String, let messageData = message["message"] as? [String:Any] {
+            if (messageSubscriptionId == conversationId) {
+                print("📤 Forwarding message event to Flutter: \(messageData)")
+                self.eventSink?(messageData)
+            } else {
+                print("⚠️ Message event conversationId mismatch: subscribed=\(messageSubscriptionId), received=\(conversationId)")
+            }
+            return
+        }
+
+        print("⚠️ Unknown event type received: \(message)")
     }
 }
 

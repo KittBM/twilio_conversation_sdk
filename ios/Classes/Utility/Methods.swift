@@ -24,5 +24,7 @@ class Methods {
     static let sendMessageWithMedia: String = "sendMessageWithMedia"
     static let getParticipantsWithName: String = "getParticipantsWithName"
     static let updateMessage: String = "updateMessage"
+    static let updateMessages: String = "updateMessages"
+    static let setTypingStatus: String = "setTypingStatus"
 
 }

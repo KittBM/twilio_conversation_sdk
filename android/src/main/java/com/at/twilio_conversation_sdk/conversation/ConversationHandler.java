@@ -257,6 +257,157 @@ public class ConversationHandler {
         });
     }
 
+    /// Update multiple messages #
+    public static void updateMessages(String conversationId, List<HashMap<String, Object>> messages, MethodChannel.Result result) {
+        if (messages == null || messages.isEmpty()) {
+            Map<String, Object> responseMap = new HashMap<>();
+            responseMap.put("success", new ArrayList<>());
+            responseMap.put("errors", new ArrayList<>());
+            responseMap.put("totalSuccess", 0);
+            responseMap.put("totalErrors", 0);
+            result.success(responseMap);
+            return;
+        }
+
+        conversationClient.getConversation(conversationId, new CallbackListener<Conversation>() {
+            @Override
+            public void onSuccess(Conversation conversation) {
+                // ✅ ดึงข้อความล่าสุดทั้งหมดใน conversation
+                conversation.getLastMessages(1000, new CallbackListener<List<Message>>() {
+                    @Override
+                    public void onSuccess(List<Message> messagesList) {
+                        // ใช้ CountDownLatch เพื่อรอให้ทุก message อัปเดตเสร็จ
+                        CountDownLatch latch = new CountDownLatch(messages.size());
+                        List<String> successList = new ArrayList<>();
+                        List<String> errorList = new ArrayList<>();
+
+                        // วนลูปผ่านแต่ละ message ที่ต้องการอัปเดต
+                        for (HashMap<String, Object> messageData : messages) {
+                            try {
+                                // ✅ ปลอดภัยกว่า - ตรวจสอบและแปลง type อย่างระมัดระวัง
+                                Object msgIdObj = messageData.get("msgId");
+                                Object newBodyObj = messageData.get("message");
+                                Object newAttributeObj = messageData.get("attribute");
+
+                                if (msgIdObj == null || newBodyObj == null) {
+                                    errorList.add("Invalid data: msgId or message is null");
+                                    latch.countDown();
+                                    continue;
+                                }
+
+                                final String msgId = String.valueOf(msgIdObj);
+                                final String newBody = String.valueOf(newBodyObj);
+
+                                // 🔍 หา message ที่มี sid ตรงกับ msgId
+                                Message foundMessage = null;
+                                for (Message msg : messagesList) {
+                                    if (msg.getSid().equals(msgId)) {
+                                        foundMessage = msg;
+                                        break;
+                                    }
+                                }
+
+                                if (foundMessage != null) {
+                                    final Message targetMessage = foundMessage;
+
+                                    // สร้าง attributes (ถ้ามี)
+                                    Attributes finalAttributes = null;
+                                    if (newAttributeObj instanceof HashMap) {
+                                        try {
+                                            JSONObject jsonObject = new JSONObject((HashMap<String, Object>) newAttributeObj);
+                                            finalAttributes = new Attributes(jsonObject);
+                                        } catch (Exception e) {
+                                            System.err.println("Error creating attributes: " + e.getMessage());
+                                        }
+                                    }
+
+                                    final Attributes attributesToSet = finalAttributes;
+
+                                    // ✅ อัปเดต body ก่อน
+                                    targetMessage.updateBody(newBody, new StatusListener() {
+                                        @Override
+                                        public void onSuccess() {
+                                            // ✅ จากนั้นอัปเดต attributes ต่อ (ถ้ามี)
+                                            if (attributesToSet != null) {
+                                                targetMessage.setAttributes(attributesToSet, new StatusListener() {
+                                                    @Override
+                                                    public void onSuccess() {
+                                                        successList.add(msgId);
+                                                        latch.countDown();
+                                                    }
+
+                                                    @Override
+                                                    public void onError(ErrorInfo errorInfo) {
+                                                        errorList.add(msgId + ": setAttributes error - " + errorInfo.getMessage());
+                                                        latch.countDown();
+                                                    }
+                                                });
+                                            } else {
+                                                // ไม่มี attributes ให้ update, ถือว่าสำเร็จ
+                                                successList.add(msgId);
+                                                latch.countDown();
+                                            }
+                                        }
+
+                                        @Override
+                                        public void onError(ErrorInfo errorInfo) {
+                                            errorList.add(msgId + ": updateBody error - " + errorInfo.getMessage());
+                                            latch.countDown();
+                                        }
+                                    });
+                                } else {
+                                    errorList.add(msgId + ": Message not found");
+                                    latch.countDown();
+                                }
+                            } catch (Exception e) {
+                                errorList.add("Exception processing message: " + e.getMessage());
+                                latch.countDown();
+                            }
+                        }
+
+                        // รอให้ทุก message อัปเดตเสร็จ
+                        new Thread(() -> {
+                            try {
+                                latch.await();
+                                // สร้าง response
+                                Map<String, Object> responseMap = new HashMap<>();
+                                responseMap.put("success", successList);
+                                responseMap.put("errors", errorList);
+                                responseMap.put("totalSuccess", successList.size());
+                                responseMap.put("totalErrors", errorList.size());
+
+                                // ส่งผลลัพธ์กลับไปยัง Flutter
+                                new Handler(Looper.getMainLooper()).post(() -> {
+                                    result.success(responseMap);
+                                });
+                            } catch (InterruptedException e) {
+                                new Handler(Looper.getMainLooper()).post(() -> {
+                                    Map<String, Object> errorResponse = new HashMap<>();
+                                    errorResponse.put("error", "Thread interrupted: " + e.getMessage());
+                                    result.success(errorResponse);
+                                });
+                            }
+                        }).start();
+                    }
+
+                    @Override
+                    public void onError(ErrorInfo errorInfo) {
+                        Map<String, Object> errorResponse = new HashMap<>();
+                        errorResponse.put("error", "getLastMessages error: " + errorInfo.getMessage());
+                        result.success(errorResponse);
+                    }
+                });
+            }
+
+            @Override
+            public void onError(ErrorInfo errorInfo) {
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("error", "getConversation error: " + errorInfo.getMessage());
+                result.success(errorResponse);
+            }
+        });
+    }
+
     /// Update message #
     public static void body(String enteredMessage, String conversationId, String msgId, HashMap attribute, MethodChannel.Result result) {
         conversationClient.getConversation(conversationId, new CallbackListener<Conversation>() {

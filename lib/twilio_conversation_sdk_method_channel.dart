@@ -138,6 +138,19 @@ class MethodChannelTwilioConversationSdk extends TwilioConversationSdkPlatform {
     return result ?? "";
   }
 
+  /// Update multiple messages #
+  @override
+  Future<Map?> updateMessages(
+      {required String conversationId,
+      required List<Map<String, dynamic>> messages}) async {
+    final Map? result =
+        await methodChannel.invokeMethod<Map>('updateMessages', {
+      "conversationId": conversationId,
+      "messages": messages
+    });
+    return result ?? {};
+  }
+
   /// Send message with media #
   @override
   Future<String?> sendMessageWithMedia(

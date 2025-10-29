@@ -586,6 +586,7 @@ public class ConversationHandler {
                             messageMap.put("body", message.getBody());
                             messageMap.put("attributes", message.getAttributes().toString());
                             messageMap.put("dateCreated", message.getDateCreated());
+                            messageMap.put("conversationSid", result.getSid());
 
                             List<Map<String, Object>> mediaList = new ArrayList<>();
                             int[] pendingMediaCount = {0}; // Counter to track pending URL fetches
@@ -668,6 +669,7 @@ public class ConversationHandler {
                             messageMap.put("body", message.getBody());
                             messageMap.put("attributes", message.getAttributes().toString());
                             messageMap.put("dateCreated", message.getDateCreated());
+                            messageMap.put("conversationSid", result.getSid());
 
                             List<Map<String, Object>> mediaList = new ArrayList<>();
                             int[] pendingMediaCount = {0}; // Counter to track pending URL fetches
@@ -1006,6 +1008,7 @@ public class ConversationHandler {
                             messagesMap.put("body", message.getBody());
                             messagesMap.put("attributes", message.getAttributes().toString());
                             messagesMap.put("dateCreated", message.getDateCreated());
+                            messagesMap.put("conversationSid", conversationId);
 
                             List<Map<String, Object>> mediaList = new ArrayList<>();
 

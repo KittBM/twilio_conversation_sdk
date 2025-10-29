@@ -28,7 +28,7 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
             return
         }
 
-        self.getMessageInDictionary(message) { [self] messageDictionary in
+        self.getMessageInDictionary(message, conversationSid: conversation.sid) { [self] messageDictionary in
             if let messageDict = messageDictionary {
                 var updatedMessage: [String: Any] = [:]
                 updatedMessage["conversationId"] = conversation.sid ?? ""
@@ -627,7 +627,7 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
         var listOfMessagess: [[String: Any]] = []
         conversation.getLastMessages(withCount: messageCount ?? 1000) { (result, messages) in
             if let messagesList = messages {
-                self.processMessagesSequentially(messagesList: messagesList) { result in
+                self.processMessagesSequentially(messagesList: messagesList, conversationSid: conversation.sid) { result in
                     completion(result) // Return the final processed list
                 }
             }
@@ -637,6 +637,7 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
 
     func processMessagesSequentially(
         messagesList: [TCHMessage],
+        conversationSid: String? = nil,
         listOfMessagess: [[String: Any]] = [],
         completion: @escaping ([[String: Any]]) -> Void
     ) {
@@ -646,7 +647,7 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
 
         func processNextMessage() {
             if index < messagesList.count { // Ensure we're within bounds
-                self.getMessageInDictionary(messagesList[index]) { messageDictionary in
+                self.getMessageInDictionary(messagesList[index], conversationSid: conversationSid) { messageDictionary in
                     if let messageDict = messageDictionary {
                         listOfMessagess.append(messageDict)
                     }
@@ -741,13 +742,16 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
 
 
 
-    func getMessageInDictionary(_ message: TCHMessage, _ completion: @escaping ([String: Any]?) -> Void) {
+    func getMessageInDictionary(_ message: TCHMessage, conversationSid: String? = nil, _ completion: @escaping ([String: Any]?) -> Void) {
         var dictionary: [String: Any] = [:]
         var attachedMedia: [[String: Any]] = []
 
         dictionary["sid"] = message.sid
         dictionary["author"] = message.author
         dictionary["body"] = message.body
+        if let convSid = conversationSid {
+            dictionary["conversationSid"] = convSid
+        }
 
         do {
             let attributes = message.attributes()?.dictionary ?? [:]

@@ -27,4 +27,6 @@ public class Methods {
     public final static String updateMessage = "updateMessage";
     public final static String updateMessages = "updateMessages";
     public final static String setTypingStatus = "setTypingStatus";
+    public final static String isClientInitialized = "isClientInitialized";
+    public final static String shutdownClient = "shutdownClient";
 }

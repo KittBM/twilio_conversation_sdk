@@ -368,6 +368,15 @@ public class TwilioConversationSdkPlugin: NSObject, FlutterPlugin,FlutterStreamH
             conversationsHandler.messageDelegate = nil
 
             break
+        case Methods.isClientInitialized:
+            let isInitialized = self.conversationsHandler.isClientInitialized()
+            result(isInitialized)
+            break
+        case Methods.shutdownClient:
+            self.conversationsHandler.shutdownClient { shutdownResult in
+                result(shutdownResult)
+            }
+            break
         default:
             break
         }

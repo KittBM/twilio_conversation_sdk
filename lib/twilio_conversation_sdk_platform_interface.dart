@@ -149,4 +149,12 @@ abstract class TwilioConversationSdkPlatform extends PlatformInterface {
       {required String conversationId,required bool isTyping}) {
     throw UnimplementedError('platformVersion() has not been implemented.');
   }
+
+  Future<bool> isClientInitialized() {
+    throw UnimplementedError('isClientInitialized() has not been implemented.');
+  }
+
+  Future<String?> shutdownClient() {
+    throw UnimplementedError('shutdownClient() has not been implemented.');
+  }
 }

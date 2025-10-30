@@ -166,6 +166,13 @@ public class TwilioConversationSdkPlugin implements FlutterPlugin, MethodCallHan
             case Methods.setTypingStatus:
                 ConversationHandler.setTypingStatus(call.argument("conversationId"), call.argument("isTyping"), result);
                 break;
+            case Methods.isClientInitialized:
+                boolean isInitialized = ConversationHandler.isClientInitialized();
+                result.success(isInitialized);
+                break;
+            case Methods.shutdownClient:
+                ConversationHandler.shutdownClient(result);
+                break;
             default:
                 break;
         }

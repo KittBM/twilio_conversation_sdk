@@ -26,5 +26,7 @@ class Methods {
     static let updateMessage: String = "updateMessage"
     static let updateMessages: String = "updateMessages"
     static let setTypingStatus: String = "setTypingStatus"
+    static let isClientInitialized: String = "isClientInitialized"
+    static let shutdownClient: String = "shutdownClient"
 
 }

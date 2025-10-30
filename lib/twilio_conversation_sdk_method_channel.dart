@@ -279,4 +279,28 @@ class MethodChannelTwilioConversationSdk extends TwilioConversationSdkPlatform {
         {"conversationId": conversationId, "isTyping": isTyping});
     return result;
   }
+
+  /// Check if client is initialized and ready to use #
+  @override
+  Future<bool> isClientInitialized() async {
+    try {
+      final result = await methodChannel.invokeMethod<bool>('isClientInitialized');
+      return result ?? false;
+    } catch (e) {
+      debugPrint('Error checking client initialization: $e');
+      return false;
+    }
+  }
+
+  /// Shutdown and clean up the Twilio client #
+  @override
+  Future<String?> shutdownClient() async {
+    try {
+      final result = await methodChannel.invokeMethod<String>('shutdownClient');
+      return result ?? "";
+    } catch (e) {
+      debugPrint('Error shutting down client: $e');
+      return "Error: $e";
+    }
+  }
 }

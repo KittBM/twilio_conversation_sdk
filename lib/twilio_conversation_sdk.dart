@@ -399,4 +399,51 @@ class TwilioConversationSdk {
     });
     return _tokenStatusController.stream;
   }
+
+  /// Checks if the Twilio Conversation Client is initialized and ready to use.
+  ///
+  /// This method checks whether the client has been properly initialized and
+  /// synchronized with the Twilio service. Use this to verify the client is
+  /// ready before performing operations like sending messages or creating conversations.
+  ///
+  /// Returns `true` if the client is initialized and synchronized, `false` otherwise.
+  ///
+  /// Example:
+  /// ```dart
+  /// final twilioSdk = TwilioConversationSdk();
+  /// bool isReady = await twilioSdk.isClientInitialized();
+  /// if (isReady) {
+  ///   // Client is ready, proceed with operations
+  ///   await twilioSdk.sendMessage(
+  ///     conversationId: 'CH123...',
+  ///     message: 'Hello!',
+  ///     attribute: {}
+  ///   );
+  /// } else {
+  ///   // Client not ready, show error or initialize
+  ///   print('Client not initialized');
+  /// }
+  /// ```
+  Future<bool> isClientInitialized() {
+    return TwilioConversationSdkPlatform.instance.isClientInitialized();
+  }
+
+  /// Shuts down and cleans up the Twilio Conversation Client.
+  ///
+  /// This method properly disposes of the Twilio client, cleaning up resources
+  /// and closing connections. Call this method when you want to log out or
+  /// when the app is being disposed.
+  ///
+  /// Returns a [String] indicating the result of the shutdown operation.
+  ///
+  /// Example:
+  /// ```dart
+  /// final twilioSdk = TwilioConversationSdk();
+  /// // When logging out or disposing
+  /// String result = await twilioSdk.shutdownClient();
+  /// print(result); // "Client shutdown successfully"
+  /// ```
+  Future<String?> shutdownClient() {
+    return TwilioConversationSdkPlatform.instance.shutdownClient();
+  }
 }

@@ -17,14 +17,24 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
     public var messageSubscriptionId: String = ""
     var tokenEventSink: FlutterEventSink?
 
+    // MARK: Client Initialization Check
+    /// Check if the client is initialized and ready to use
+    /// - Returns: true if client is initialized and synchronized, false otherwise
+    func isClientInitialized() -> Bool {
+        guard let client = client else {
+            return false
+        }
+        return client.synchronizationStatus == .completed
+    }
+
 
 
     //    MARK: raw
     func conversationsClient(_ client: TwilioConversationsClient, conversation: TCHConversation,
                              messageAdded message: TCHMessage) {
-                      
+
         var attachedMedia: [[String: Any]] = []
-        guard client.synchronizationStatus == .completed else {
+        guard isClientInitialized() else {
             return
         }
 
@@ -136,7 +146,7 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
                              participant: TCHParticipant) {
         print("onTypingStarted -> participant: \(participant.identity ?? "unknown"), conversation: \(conversation.sid ?? "unknown")")
 
-        guard client.synchronizationStatus == .completed else {
+        guard isClientInitialized() else {
             return
         }
 
@@ -154,7 +164,7 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
                              participant: TCHParticipant) {
         print("onTypingEnded -> participant: \(participant.identity ?? "unknown"), conversation: \(conversation.sid ?? "unknown")")
 
-        guard client.synchronizationStatus == .completed else {
+        guard isClientInitialized() else {
             return
         }
 
@@ -535,7 +545,7 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
     }
 
     func createConversation(uniqueConversationName:String,_ completion: @escaping (Bool, TCHConversation?,String) -> Void) {
-        guard let client = client else {
+        guard isClientInitialized(), let client = client else {
             return
         }
         // Create the conversation if it hasn't been created yet
@@ -553,10 +563,7 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
     }
 
     func getConversations(_ completion: @escaping([TCHConversation]) -> Void) {
-        guard let client = client else {
-            return
-        }
-        guard client.synchronizationStatus == .completed else {
+        guard isClientInitialized(), let client = client else {
             return
         }
 
@@ -605,10 +612,7 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
     }
 
     func getConversationFromId(conversationId:String,_ completion: @escaping(TCHConversation?) -> Void){
-        guard let client = client else {
-            return
-        }
-        guard client.synchronizationStatus == .completed else {
+        guard isClientInitialized(), let client = client else {
             return
         }
         client.conversation(withSidOrUniqueName: conversationId) { (result, conversation) in
@@ -620,8 +624,8 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
     }
 
     func loadPreviousMessages(_ conversation: TCHConversation,_ messageCount: UInt?,_ completion: @escaping([[String: Any]]?) -> Void) {
-        print("synchronizationStatus->\(client?.synchronizationStatus == .completed)")
-        guard client?.synchronizationStatus == .completed else {
+        print("synchronizationStatus->\(isClientInitialized())")
+        guard isClientInitialized() else {
             return
         }
         var listOfMessagess: [[String: Any]] = []
@@ -701,8 +705,8 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
 
 
     func getLastMessage(_ conversation: TCHConversation,_ messageCount: UInt?,_ completion: @escaping([[String: Any]]?) -> Void) {
-        print("synchronizationStatus->\(client?.synchronizationStatus == .completed)")
-        guard client?.synchronizationStatus == .completed else {
+        print("synchronizationStatus->\(isClientInitialized())")
+        guard isClientInitialized() else {
             return
         }
         var listOfMessagess: [[String: Any]] = []
@@ -878,6 +882,28 @@ class ConversationsHandler: NSObject, TwilioConversationsClientDelegate {
         } else {
             print("Failed to parse date string")
             return nil
+        }
+    }
+
+    // MARK: - Shutdown Client
+    /// Shuts down and cleans up the Twilio Conversations Client
+    func shutdownClient(completion: @escaping (String) -> Void) {
+        if let client = self.client {
+            // Shutdown the client
+            client.shutdown()
+            self.client = nil
+
+            // Clear delegates and subscriptions
+            self.messageDelegate = nil
+            self.clientDelegate = nil
+            self.isSubscribe = nil
+            self.conversationId = nil
+            self.messageSubscriptionId = ""
+
+            print("Twilio Conversations Client shutdown successfully")
+            completion("Client shutdown successfully")
+        } else {
+            completion("Client already shutdown or not initialized")
         }
     }
 }

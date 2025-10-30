@@ -59,6 +59,20 @@ public class ConversationHandler {
     public static FlutterPlugin.FlutterPluginBinding flutterPluginBinding;
     private static MessageInterface messageInterface;
     private static AccessTokenInterface accessTokenInterface;
+    private static ConversationsClient.SynchronizationStatus currentSynchronizationStatus = null;
+    private static ConversationsClient.ConnectionState currentConnectionState = null;
+
+    /**
+     * Check if the client is initialized and ready to use
+     * @return true if client is initialized and synchronized, false otherwise
+     */
+    public static boolean isClientInitialized() {
+        if (conversationClient == null) {
+            return false;
+        }
+        return currentConnectionState == ConversationsClient.ConnectionState.CONNECTED
+                && currentSynchronizationStatus == ConversationsClient.SynchronizationStatus.COMPLETED;
+    }
 
     /// Generate token and authenticate user #
     public static String generateAccessToken(String accountSid, String apiKey, String apiSecret, String identity, String serviceSid, String pushSid) {
@@ -80,6 +94,11 @@ public class ConversationHandler {
     }
 
     public static void registerFCMToken(String token, MethodChannel.Result result) {
+        if (!isClientInitialized()) {
+            result.success("Client not initialized");
+            return;
+        }
+
         conversationClient.registerFCMToken(new ConversationsClient.FCMToken(token), new StatusListener() {
             @Override
             public void onSuccess() {
@@ -96,6 +115,11 @@ public class ConversationHandler {
     }
 
     public static void unregisterFCMToken(String token, MethodChannel.Result result) {
+        if (!isClientInitialized()) {
+            result.success("Client not initialized");
+            return;
+        }
+
         conversationClient.unregisterFCMToken(new ConversationsClient.FCMToken(token), new StatusListener() {
             @Override
             public void onSuccess() {
@@ -113,6 +137,10 @@ public class ConversationHandler {
 
     /// Create new conversation #
     public static void createConversation(String conversationName, String identity, MethodChannel.Result result) {
+        if (!isClientInitialized()) {
+            result.success("Client not initialized");
+            return;
+        }
 
         conversationClient.createConversation(conversationName, new CallbackListener<Conversation>() {
             @Override
@@ -136,6 +164,11 @@ public class ConversationHandler {
 
     /// Add participant in a conversation #
     public static void addParticipant(String participantName, String conversationId, MethodChannel.Result result) {
+        if (!isClientInitialized()) {
+            result.success("Client not initialized");
+            return;
+        }
+
         conversationClient.getConversation(conversationId, new CallbackListener<Conversation>() {
             @Override
             public void onSuccess(Conversation conversation) {
@@ -165,6 +198,11 @@ public class ConversationHandler {
 
     /// Remove participant in a conversation #
     public static void removeParticipant(String participantName, String conversationId, MethodChannel.Result result) {
+        if (!isClientInitialized()) {
+            result.success("Client not initialized");
+            return;
+        }
+
         conversationClient.getConversation(conversationId, new CallbackListener<Conversation>() {
             @Override
             public void onSuccess(Conversation conversation) {
@@ -222,6 +260,11 @@ public class ConversationHandler {
 
     /// Send message #
     public static void sendMessages(String enteredMessage, String conversationId, HashMap attribute, MethodChannel.Result result) {
+        if (!isClientInitialized()) {
+            result.success("Client not initialized");
+            return;
+        }
+
         conversationClient.getConversation(conversationId, new CallbackListener<Conversation>() {
             @Override
             public void onSuccess(Conversation conversation) {
@@ -883,6 +926,11 @@ public class ConversationHandler {
     }
 
     public static void getLastMessages(String conversationId, MethodChannel.Result result) {
+        if (!isClientInitialized()) {
+            result.success("Client not initialized");
+            return;
+        }
+
         List<Map<String, Object>> list = new ArrayList<>();
         conversationClient.getConversation(conversationId, new CallbackListener<Conversation>() {
             @Override
@@ -958,6 +1006,11 @@ public class ConversationHandler {
     }
 
     public static void getUnReadMsgCount(String conversationId, MethodChannel.Result result) {
+        if (!isClientInitialized()) {
+            result.success("Client not initialized");
+            return;
+        }
+
         List<Map<String, Object>> list = new ArrayList<>();
         conversationClient.getConversation(conversationId, new CallbackListener<Conversation>() {
             @Override
@@ -992,6 +1045,11 @@ public class ConversationHandler {
 
     /// Get messages from the specific conversation #
     public static void getAllMessages(String conversationId, Integer messageCount, MethodChannel.Result result) {
+        if (!isClientInitialized()) {
+            result.success("Client not initialized");
+            return;
+        }
+
         List<Map<String, Object>> list = new ArrayList<>();
         conversationClient.getConversation(conversationId, new CallbackListener<Conversation>() {
             @Override
@@ -1223,6 +1281,7 @@ public class ConversationHandler {
                     @Override
                     public void onClientSynchronization(ConversationsClient.SynchronizationStatus synchronizationStatus) {
                         System.out.println("onClientSynchronization synchronizationStatus->" + synchronizationStatus.getValue());
+                        currentSynchronizationStatus = synchronizationStatus;
                         if (synchronizationStatus == ConversationsClient.SynchronizationStatus.COMPLETED) {
                             System.out.println("Client Synchronized");
                         }
@@ -1262,6 +1321,7 @@ public class ConversationHandler {
                     @Override
                     public void onConnectionStateChange(ConversationsClient.ConnectionState state) {
                         System.out.println("ConnectionState:" + state.getValue());
+                        currentConnectionState = state;
                     }
 
                     @Override
@@ -1295,6 +1355,11 @@ public class ConversationHandler {
 
     /// Get participants from the specific conversation #
     public static void getParticipants(String conversationId, MethodChannel.Result result) {
+        if (!isClientInitialized()) {
+            result.success("Client not initialized");
+            return;
+        }
+
         conversationClient.getConversation(conversationId, new CallbackListener<Conversation>() {
             @Override
             public void onSuccess(Conversation conversation) {
@@ -1325,6 +1390,11 @@ public class ConversationHandler {
     }
 
     public static void getParticipantsWithName(String conversationId, MethodChannel.Result result) {
+        if (!isClientInitialized()) {
+            result.success("Client not initialized");
+            return;
+        }
+
         conversationClient.getConversation(conversationId, new CallbackListener<Conversation>() {
             @Override
             public void onSuccess(Conversation conversation) {
@@ -1421,6 +1491,32 @@ public class ConversationHandler {
         //System.out.println("accessTokenInterface->" + accessTokenInterface.toString());
         if (accessTokenInterface != null) {
             accessTokenInterface.onTokenStatusChange(status);
+        }
+    }
+
+    /**
+     * Shutdown and clean up the Twilio Conversations Client
+     * This will properly dispose of the client and free up resources
+     */
+    public static void shutdownClient(MethodChannel.Result result) {
+        try {
+            if (conversationClient != null) {
+                // Shutdown the client
+                conversationClient.shutdown();
+                conversationClient = null;
+
+                // Reset synchronization status
+                currentSynchronizationStatus = null;
+                currentConnectionState = null;
+
+                System.out.println("Twilio Conversations Client shutdown successfully");
+                result.success("Client shutdown successfully");
+            } else {
+                result.success("Client already shutdown or not initialized");
+            }
+        } catch (Exception e) {
+            System.err.println("Error shutting down client: " + e.getMessage());
+            result.error("SHUTDOWN_ERROR", "Failed to shutdown client: " + e.getMessage(), null);
         }
     }
 }
